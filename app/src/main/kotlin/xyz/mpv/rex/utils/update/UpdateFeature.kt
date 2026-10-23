@@ -86,9 +86,9 @@ class UpdateManager(
     private val json = Json { ignoreUnknownKeys = true }
 
     companion object {
-        const val PREVIEW_PAGE_URL = "https://mpvrex.github.io/REX-Player/"
-        const val PREVIEW_JSON_URL = "https://mpvrex.github.io/REX-Player/version.json"
-        const val RELEASE_API_URL = "https://api.github.com/repos/mpvRex/REX-Player/releases/latest"
+        const val PREVIEW_PAGE_URL = "https://jerry090900.github.io/Biscuit-Player/"
+        const val PREVIEW_JSON_URL = "https://jerry090900.github.io/Biscuit-Player/version.json"
+        const val RELEASE_API_URL = "https://api.github.com/repos/jerry090900/Biscuit-Player/releases/latest"
 
         fun isPreviewBuild(): Boolean {
             return BuildConfig.IS_PREVIEW || BuildConfig.BUILD_TYPE == "preview" || BuildConfig.APPLICATION_ID.endsWith(".preview")
@@ -151,7 +151,7 @@ class UpdateManager(
             val buildTime = timeMatch?.groupValues?.get(1)?.trim() ?: ""
 
             val apkRegex = Regex(
-                """(?:class=["']item-size["']>\s*([^<]+)\s*</div>\s*)?<a\s+[^>]*href=["'](REX-Player-preview-[^"']+\.apk)["']""",
+                """(?:class=["']item-size["']>\s*([^<]+)\s*</div>\s*)?<a\s+[^>]*href=["'](Biscuit-Player-preview-[^"']+\.apk)["']""",
                 RegexOption.IGNORE_CASE
             )
             val assets = apkRegex.findAll(html).map { matchResult ->
@@ -177,7 +177,7 @@ class UpdateManager(
 
             return Release(
                 tagName = normalizedTag,
-                name = "REX Player Preview $normalizedTag",
+                name = "Biscuit Player Preview $normalizedTag",
                 body = "Nightly preview build automatically generated from master branch.",
                 publishedAt = buildTime,
                 assets = assets,

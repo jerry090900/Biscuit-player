@@ -22,7 +22,7 @@ class JellyfinApi(
   companion object {
     private const val TAG = "JellyfinApi"
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
-    private const val CLIENT_NAME = "mpvRex"
+    private const val CLIENT_NAME = "Biscuit Player"
     private const val CLIENT_VERSION = "1.0"
   }
 

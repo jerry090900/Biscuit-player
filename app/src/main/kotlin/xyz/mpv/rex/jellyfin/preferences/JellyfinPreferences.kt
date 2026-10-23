@@ -81,7 +81,7 @@ class JellyfinPreferences(context: Context) {
     }
 
   private fun defaultDeviceName(): String {
-    val model = android.os.Build.MODEL?.takeIf { it.isNotBlank() } ?: return "mpvRex"
+    val model = android.os.Build.MODEL?.takeIf { it.isNotBlank() } ?: return "Biscuit Player"
     return model.take(32)
   }
 

@@ -1,11 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 💬 Telegram Community Chat
-    url: https://t.me/mpvRex_chat
-    about: Ask questions, get help, and chat with the community
-  - name: 📢 Telegram Channel
-    url: https://t.me/mpvRex
-    about: News, development announcements, and release updates
-  - name: 🚀 Preview Builds
-    url: https://mpvrex.github.io/REX-Player
-    about: Download and test experimental preview releases
+  - name: Releases
+    url: https://github.com/jerry090900/Biscuit-Player/releases
+    about: Download releases when available
+  - name: Preview Builds
+    url: https://jerry090900.github.io/Biscuit-Player/
+    about: Preview downloads (requires GitHub Pages configuration)

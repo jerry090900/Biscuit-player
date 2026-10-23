@@ -20,8 +20,8 @@ class JellyfinRemoteService : Service() {
   private val prefs: JellyfinPreferences by inject()
 
   companion object {
-    const val ACTION_START = "xyz.mpv.rex.jellyfin.START_REMOTE"
-    const val ACTION_STOP = "xyz.mpv.rex.jellyfin.STOP_REMOTE"
+    const val ACTION_START = xyz.mpv.rex.BuildConfig.APPLICATION_ID + ".jellyfin.START_REMOTE"
+    const val ACTION_STOP = xyz.mpv.rex.BuildConfig.APPLICATION_ID + ".jellyfin.STOP_REMOTE"
     private const val NOTIF_ID = 1002
     private const val CHANNEL_ID = "jellyfin_remote_channel"
   }
@@ -65,7 +65,7 @@ class JellyfinRemoteService : Service() {
 
   private fun startForegroundWithNotification() {
     val notif: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-      .setContentTitle("mpvRex Jellyfin Remote")
+      .setContentTitle("Biscuit Player Jellyfin Remote")
       .setContentText("Discoverable as Play on target")
       .setSmallIcon(R.drawable.ic_launcher_foreground)
       .setOngoing(true)

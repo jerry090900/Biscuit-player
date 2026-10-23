@@ -95,7 +95,7 @@ jobs:
           
           for arch in "${apks[@]}"; do
             src="app/build/outputs/apk/preview/app-${arch}-preview.apk"
-            dest="output/REX-Player-preview-r${commit_count}-${arch}.apk"
+            dest="output/Biscuit-Player-preview-r${commit_count}-${arch}.apk"
             
             if [ ! -f "$src" ]; then
               echo "::error file=$src::Signed APK for $arch was not found"
@@ -140,11 +140,11 @@ jobs:
           export X86_SIZE="${{ needs.build.outputs.x86_size }}"
           export X86_64_SIZE="${{ needs.build.outputs.x86_64_size }}"
           
-          export UNIVERSAL_BYTES=$(stat -c%s ./public/REX-Player-preview-r${COMMIT_COUNT}-universal.apk 2>/dev/null || echo "${{ needs.build.outputs.universal_bytes }}")
-          export ARM64_BYTES=$(stat -c%s ./public/REX-Player-preview-r${COMMIT_COUNT}-arm64-v8a.apk 2>/dev/null || echo "${{ needs.build.outputs.arm64-v8a_bytes }}")
-          export ARMV7_BYTES=$(stat -c%s ./public/REX-Player-preview-r${COMMIT_COUNT}-armeabi-v7a.apk 2>/dev/null || echo "${{ needs.build.outputs.armeabi-v7a_bytes }}")
-          export X86_BYTES=$(stat -c%s ./public/REX-Player-preview-r${COMMIT_COUNT}-x86.apk 2>/dev/null || echo "${{ needs.build.outputs.x86_bytes }}")
-          export X86_64_BYTES=$(stat -c%s ./public/REX-Player-preview-r${COMMIT_COUNT}-x86_64.apk 2>/dev/null || echo "${{ needs.build.outputs.x86_64_bytes }}")
+          export UNIVERSAL_BYTES=$(stat -c%s ./public/Biscuit-Player-preview-r${COMMIT_COUNT}-universal.apk 2>/dev/null || echo "${{ needs.build.outputs.universal_bytes }}")
+          export ARM64_BYTES=$(stat -c%s ./public/Biscuit-Player-preview-r${COMMIT_COUNT}-arm64-v8a.apk 2>/dev/null || echo "${{ needs.build.outputs.arm64-v8a_bytes }}")
+          export ARMV7_BYTES=$(stat -c%s ./public/Biscuit-Player-preview-r${COMMIT_COUNT}-armeabi-v7a.apk 2>/dev/null || echo "${{ needs.build.outputs.armeabi-v7a_bytes }}")
+          export X86_BYTES=$(stat -c%s ./public/Biscuit-Player-preview-r${COMMIT_COUNT}-x86.apk 2>/dev/null || echo "${{ needs.build.outputs.x86_bytes }}")
+          export X86_64_BYTES=$(stat -c%s ./public/Biscuit-Player-preview-r${COMMIT_COUNT}-x86_64.apk 2>/dev/null || echo "${{ needs.build.outputs.x86_64_bytes }}")
           
           export UNIVERSAL_BYTES=${UNIVERSAL_BYTES:-0}
           export ARM64_BYTES=${ARM64_BYTES:-0}

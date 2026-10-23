@@ -14,7 +14,7 @@
     <string name="pref_appearance_category_bottom_nav">Pestañas de navegación inferior</string>
     <string name="pref_appearance_tab_home_title">Inicio / Archivos</string>
     <string name="pref_appearance_tab_home_summary">Mostrar carpetas locales y el explorador de archivos</string>
-    <string name="pref_appearance_tab_shorts_title">RexShorts</string>
+    <string name="pref_appearance_tab_shorts_title">Biscuit Shorts</string>
     <string name="pref_appearance_tab_shorts_summary">Alternar fuentes de video vertical de ritmo rápido</string>
     <string name="pref_appearance_tab_recents_title">Reproducidos recientemente</string>
     <string name="pref_appearance_tab_recents_summary">Reanudar rápidamente sesiones de video anteriores</string>
@@ -331,11 +331,11 @@
     <string name="pref_about_donate_paypal_summary">Apoyar al desarrollador en PayPal</string>
     <string name="pref_about_donate_upi">UPI</string>
 
-    <string name="pref_about_telegram_title">Telegram</string>
-    <string name="pref_about_telegram_channel">Canal de Telegram</string>
-    <string name="pref_about_telegram_channel_summary">Únete a nuestro canal para estar al tanto de actualizaciones y novedades</string>
-    <string name="pref_about_telegram_group">Grupo de chat de Telegram</string>
-    <string name="pref_about_telegram_group_summary">Interactúa y conversa con la comunidad</string>
+    <string name="pref_about_telegram_title">Community</string>
+    <string name="pref_about_telegram_channel">GitHub Releases</string>
+    <string name="pref_about_telegram_channel_summary">View Biscuit Player releases and updates</string>
+    <string name="pref_about_telegram_group">GitHub Issues</string>
+    <string name="pref_about_telegram_group_summary">Report bugs and request features</string>
 
     <string name="player_sheets_add_ext_sub">Añadir subtítulos externos</string>
     <string name="player_sheets_add_ext_audio">Añadir pistas de audio externas</string>
@@ -799,11 +799,11 @@
     <string name="pref_category_file_management">Gestión de archivos</string>
     <string name="pref_category_playback_controls">Reproducción y controles</string>
     <string name="pref_category_media_settings">Configuración de medios</string>
-    <string name="pref_category_rexshorts">RexShorts</string>
-    <string name="pref_category_rexshorts_settings">Ajustes de RexShorts</string>
+    <string name="pref_category_rexshorts">Biscuit Shorts</string>
+    <string name="pref_category_rexshorts_settings">Ajustes de Biscuit Shorts</string>
     <string name="pref_category_rexshorts_settings_desc">Administrar contenido activado/desactivado, aleatorio y bloqueado</string>
     <string name="pref_category_advanced_about">Avanzado y Acerca de</string>
-    <string name="pref_enable_rexshorts">Habilitar RexShorts</string>
+    <string name="pref_enable_rexshorts">Habilitar Biscuit Shorts</string>
     <string name="pref_enable_rexshorts_summary">Mostrar la pestaña Shorts en la barra de navegación inferior</string>
     <string name="pref_auto_swipe_shorts">Deslizar automáticamente al siguiente short</string>
     <string name="pref_auto_swipe_shorts_summary">Pase automáticamente al siguiente short cuando finalice el actual</string>
@@ -878,16 +878,16 @@
     <string name="why_do_i_see_this">¿Por qué veo esto?</string>
     <string name="why_this_permission_is_needed">¿Por qué se necesita este permiso?</string>
     <string name="permission_used_exclusively_for">El permiso se utiliza exclusivamente para:</string>
-    <string name="permission_explanation_playstore_intro">mpvRex necesita acceso a sus archivos de video para proporcionar su funcionalidad principal como reproductor multimedia.</string>
+    <string name="permission_explanation_playstore_intro">Biscuit Player necesita acceso a sus archivos de video para proporcionar su funcionalidad principal como reproductor multimedia.</string>
     <string name="permission_usage_bullet_list">• Descubrir y mostrar sus archivos de vídeo\n• Reproducción de contenido multimedia\n• Cargar sus archivos de subtitulos</string>
-    <string name="permission_explanation_standard_intro">mpvRex siempre ha requerido permiso de acceso al almacenamiento, ya que es esencial que la aplicación encuentre todos los archivos multimedia y de subtítulos en su dispositivo, incluidos los que no son compatibles con el sistema.</string>
+    <string name="permission_explanation_standard_intro">Biscuit Player siempre ha requerido permiso de acceso al almacenamiento, ya que es esencial que la aplicación encuentre todos los archivos multimedia y de subtítulos en su dispositivo, incluidos los que no son compatibles con el sistema.</string>
     <string name="permission_security_policy_change">Sin embargo, debido a un cambio en la política de seguridad, las aplicaciones creadas para Android 11 y versiones posteriores ahora requieren permiso adicional para continuar accediendo a las mismas.</string>
     <string name="permission_privacy_assurance_standard">Tenga en cuenta que este permiso solo se utiliza para el descubrimiento automático de archivos multimedia/subtítulos en su dispositivo y no nos permitirá acceder a los archivos de datos privados almacenados por otras aplicaciones de ninguna manera.</string>
-    <string name="opensource_github_notice">mpvRex es un proyecto de código abierto. Puede revisar el código fuente y verificar cómo se utilizan los permisos visitando nuestro repositorio de GitHub en:</string>
+    <string name="opensource_github_notice">Biscuit Player es un proyecto de código abierto. Puede revisar el código fuente y verificar cómo se utilizan los permisos visitando nuestro repositorio de GitHub en:</string>
     <string name="privacy_assurance_final">Tenga la seguridad de que su privacidad es nuestra máxima prioridad y no accedemos a sus archivos para otros fines ni los transferimos ni almacenamos en nuestros servidores. Permanecen seguros en su dispositivo.</string>
-    <string name="permission_required_photos_videos">mpvRex requiere permiso de \"Fotos y videos\" para acceder y reproducir sus archivos de video almacenados en su dispositivo.</string>
-    <string name="permission_required_storage">mpvRex requiere permiso de \"Almacenamiento\" para acceder y reproducir sus archivos multimedia almacenados en su dispositivo.</string>
-    <string name="permission_required_all_files">mpvRex requiere permiso de \"Acceso a todos los archivos\" para descubrir medios y subtítulos en su dispositivo debido a un cambio en la política de seguridad en Android 11 y versiones posteriores.</string>
+    <string name="permission_required_photos_videos">Biscuit Player requiere permiso de \"Fotos y videos\" para acceder y reproducir sus archivos de video almacenados en su dispositivo.</string>
+    <string name="permission_required_storage">Biscuit Player requiere permiso de \"Almacenamiento\" para acceder y reproducir sus archivos multimedia almacenados en su dispositivo.</string>
+    <string name="permission_required_all_files">Biscuit Player requiere permiso de \"Acceso a todos los archivos\" para descubrir medios y subtítulos en su dispositivo debido a un cambio en la política de seguridad en Android 11 y versiones posteriores.</string>
     <string name="permission_explanation_tiramisu_plus">En Android 13 y versiones posteriores, este permiso permite que la aplicación lea archivos de video desde el almacenamiento de su dispositivo, incluidas las carpetas Descargas, Películas y DCIM.</string>
     <string name="permission_explanation_pre_tiramisu">Este permiso permite que la aplicación lea archivos multimedia desde el almacenamiento de su dispositivo para reproducir videos y audio.</string>
     <string name="playlist_separator">• %1$s</string>
@@ -1282,12 +1282,12 @@
     <string name="system_default">Configuración predeterminada del sistema</string>
     <string name="pref_appearance_language_title">Idioma de la aplicación</string>
     <string name="pref_appearance_language_summary">Cambiar el idioma de visualización de la aplicación</string>
-    <string name="welcome_title">Bienvenido a mpvRex</string>
+    <string name="welcome_title">Bienvenido a Biscuit Player</string>
     <string name="welcome_subtitle">Tu reproductor multimedia moderno, potente y personalizable.</string>
     <string name="welcome_language_section_title">Idioma preferido</string>
     <string name="welcome_language_section_desc">Selecciona el idioma de visualización</string>
     <string name="storage_access_granted">Acceso al almacenamiento concedido</string>
-    <string name="storage_access_granted_desc">Se ha otorgado el permiso. mpvRex está listo para detectar y reproducir tus archivos multimedia.</string>
+    <string name="storage_access_granted_desc">Se ha otorgado el permiso. Biscuit Player está listo para detectar y reproducir tus archivos multimedia.</string>
     <string name="welcome_grant_permission">Conceder permiso</string>
     <string name="welcome_get_started">Empezar</string>
     <string name="welcome_skip_permission">Continuar sin acceso al almacenamiento</string>
@@ -1349,7 +1349,7 @@
     <string name="web_share_require_token_enabled_desc">Se requiere el token ?t= para ver los archivos</string>
     <string name="web_share_require_token_disabled_desc">Acceso libre (rápido y fácil)</string>
     <string name="web_share_received_title">Recibido (%1$d)</string>
-    <string name="web_share_received_path">Descargar/REX Player</string>
+    <string name="web_share_received_path">Descargar/Biscuit Player</string>
     <string name="web_share_copy_link">Copiar enlace</string>
     <string name="web_share_link_copied">Enlace copiado al portapapeles</string>
     <string name="web_share_step_2">Escanee el código QR o escriba la URL en cualquier navegador</string>

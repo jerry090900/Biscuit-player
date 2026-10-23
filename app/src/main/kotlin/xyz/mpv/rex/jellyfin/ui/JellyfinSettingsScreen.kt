@@ -243,12 +243,12 @@ object JellyfinSettingsScreen : Screen {
             }, enabled = configured) {
               Text("Register now")
             }
-            Text("Registers mpvRex as remote player via /Sessions/Capabilities and opens WebSocket. Check logcat JellyfinRemote.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text("Registers Biscuit Player as remote player via /Sessions/Capabilities and opens WebSocket. Check logcat JellyfinRemote.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
           }
         }
 
         Text(
-          "When Jellyfin launches mpvRex via external player, the item is identified from /Videos/{id}/stream. No filename matching is used. Progress is reported every ~10s and immediately on pause/stop/exit.",
+          "When Jellyfin launches Biscuit Player via external player, the item is identified from /Videos/{id}/stream. No filename matching is used. Progress is reported every ~10s and immediately on pause/stop/exit.",
           style = MaterialTheme.typography.bodySmall,
           color = MaterialTheme.colorScheme.outline,
         )

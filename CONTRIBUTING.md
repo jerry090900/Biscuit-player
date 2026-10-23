@@ -1,6 +1,6 @@
 Looking to report an issue/bug or make a feature request? Please refer to the [README](README.md) file.
 
-Thanks for your interest in contributing to REX Player!
+Thanks for your interest in contributing to Biscuit Player!
 
 This guide outlines our development practices, code guidelines, git workflow, and translation contribution process.
 
@@ -123,14 +123,14 @@ pip install droidlate
 ```
 
 #### 2. Prepare the Repository
-Ensure you have cloned the latest code for REX Player:
+Ensure you have cloned the latest code for Biscuit Player:
 ```bash
-git clone https://github.com/mpvRex/REX-Player.git
-cd REX-Player
+git clone https://github.com/jerry090900/Biscuit-Player.git
+cd Biscuit-Player
 ```
 
 #### 3. Start Droidlate
-Open your terminal in the root of the REX-Player directory and run:
+Open your terminal in the root of the Biscuit-Player directory and run:
 ```bash
 droidlate
 ```

@@ -314,7 +314,7 @@ class MainActivity : ComponentActivity() {
                     (release.htmlUrl ?: if (UpdateManager.isPreviewBuild()) {
                       UpdateManager.PREVIEW_PAGE_URL
                     } else {
-                      "https://github.com/mpvRex/REX-Player/releases/latest"
+                      "https://github.com/jerry090900/Biscuit-Player/releases/latest"
                     }).toUri()
                   )
                 )
@@ -340,7 +340,7 @@ class MainActivity : ComponentActivity() {
                     (release.htmlUrl ?: if (UpdateManager.isPreviewBuild()) {
                       UpdateManager.PREVIEW_PAGE_URL
                     } else {
-                      "https://github.com/mpvRex/REX-Player/releases/latest"
+                      "https://github.com/jerry090900/Biscuit-Player/releases/latest"
                     }).toUri()
                   )
                 )

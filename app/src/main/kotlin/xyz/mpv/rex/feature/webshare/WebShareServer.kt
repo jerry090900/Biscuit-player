@@ -160,7 +160,7 @@ class WebShareServer(
     val pipedOut = PipedOutputStream()
     val pipedIn = PipedInputStream(pipedOut, 64 * 1024)
 
-    thread(name = "REXPlayer-WebShare-ZipStream") {
+    thread(name = "BiscuitPlayer-WebShare-ZipStream") {
       try {
         ZipOutputStream(pipedOut.buffered()).use { zipOut ->
           val buffer = ByteArray(64 * 1024)
@@ -186,7 +186,7 @@ class WebShareServer(
     }
 
     val response = newChunkedResponse(Response.Status.OK, "application/zip", pipedIn)
-    response.addHeader("Content-Disposition", "attachment; filename=\"REX_Player_shared_files.zip\"")
+    response.addHeader("Content-Disposition", "attachment; filename=\"Biscuit_Player_shared_files.zip\"")
     return response
   }
 
@@ -228,7 +228,7 @@ class WebShareServer(
   private fun handleUpload(session: IHTTPSession): Response {
     return try {
       val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-      val rexPlayerDir = File(downloadsDir, "REX Player")
+      val rexPlayerDir = File(downloadsDir, "Biscuit Player")
       if (!rexPlayerDir.exists()) {
         rexPlayerDir.mkdirs()
       }

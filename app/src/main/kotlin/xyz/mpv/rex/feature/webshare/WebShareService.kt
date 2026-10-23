@@ -19,9 +19,9 @@ import xyz.mpv.rex.R
 class WebShareService : Service() {
 
   companion object {
-    const val ACTION_START = "xyz.mpv.rex.feature.webshare.ACTION_START"
-    const val ACTION_STOP = "xyz.mpv.rex.feature.webshare.ACTION_STOP"
-    const val ACTION_UPDATE = "xyz.mpv.rex.feature.webshare.ACTION_UPDATE"
+    const val ACTION_START = xyz.mpv.rex.BuildConfig.APPLICATION_ID + ".feature.webshare.ACTION_START"
+    const val ACTION_STOP = xyz.mpv.rex.BuildConfig.APPLICATION_ID + ".feature.webshare.ACTION_STOP"
+    const val ACTION_UPDATE = xyz.mpv.rex.BuildConfig.APPLICATION_ID + ".feature.webshare.ACTION_UPDATE"
     private const val NOTIFICATION_ID = 4092
     private const val CHANNEL_ID = "web_share_service_channel"
   }
@@ -153,7 +153,7 @@ class WebShareService : Service() {
 
     return NotificationCompat.Builder(this, CHANNEL_ID)
       .setSmallIcon(R.drawable.baseline_share_24)
-      .setContentTitle("REX Player Web Share")
+      .setContentTitle("Biscuit Player Web Share")
       .setContentText(contentText)
       .setSubText(subText)
       .setOngoing(true)
@@ -183,12 +183,12 @@ class WebShareService : Service() {
   private fun acquireLocks() {
     try {
       val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-      wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "REXPlayer:WebShareWakeLock").apply {
+      wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BiscuitPlayer:WebShareWakeLock").apply {
         acquire(4 * 60 * 60 * 1000L) // 4 hours timeout
       }
 
       val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-      wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "REXPlayer:WebShareWifiLock").apply {
+      wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "BiscuitPlayer:WebShareWifiLock").apply {
         acquire()
       }
     } catch (e: Exception) {

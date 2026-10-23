@@ -37,5 +37,5 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "mpvEx"
+rootProject.name = "Biscuit-Player"
 include(":app")

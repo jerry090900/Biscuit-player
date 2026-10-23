@@ -131,7 +131,7 @@ class JellyfinRemoteClient(
 
   private fun buildAuth(token: String, deviceId: String): String {
     val deviceName = prefs.deviceName.replace("\"", "'")
-    return "MediaBrowser Client=\"mpvRex\", Device=\"$deviceName\", DeviceId=\"$deviceId\", Version=\"0.1\", Token=\"$token\""
+    return "MediaBrowser Client=\"Biscuit Player\", Device=\"$deviceName\", DeviceId=\"$deviceId\", Version=\"0.1\", Token=\"$token\""
   }
 
   private fun connectWebSocket(server: String, token: String, deviceId: String) {
@@ -432,7 +432,7 @@ class JellyfinRemoteClient(
       } catch (e: Exception) {
         Log.w(TAG, "Failed to start PlayerActivity: ${e.message}")
       }
-      // Report Playing so dashboard shows Now Playing under mpvRex's own session
+      // Report Playing so dashboard shows Now Playing under Biscuit Player's own session
       val deviceId = prefs.deviceId
       val ok = reportPlaying(server, token, deviceId, itemId, mediaSourceId, ticks)
       Log.d(TAG, "Remote reportPlaying ${if (ok) "OK" else "failed"}")

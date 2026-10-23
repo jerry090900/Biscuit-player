@@ -78,7 +78,7 @@ jobs:
           apks=("universal" "arm64-v8a" "armeabi-v7a" "x86" "x86_64")
           for abi in "${apks[@]}"; do
             src="app/build/outputs/apk/release/app-${abi}-release.apk"
-            dst="output/REX-Player-${abi}-${{ env.SHORT_SHA }}.apk"
+            dst="output/Biscuit-Player-${abi}-${{ env.SHORT_SHA }}.apk"
             if [ -f "$src" ]; then
               cp "$src" "$dst"
             fi
@@ -88,29 +88,29 @@ jobs:
       - name: Upload app-arm64-v8a Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: REX-Player-arm64-v8a-signed-${{ env.SHORT_SHA }}
-          path: output/REX-Player-arm64-v8a-${{ env.SHORT_SHA }}.apk
+          name: Biscuit-Player-arm64-v8a-signed-${{ env.SHORT_SHA }}
+          path: output/Biscuit-Player-arm64-v8a-${{ env.SHORT_SHA }}.apk
 
       - name: Upload app-armeabi-v7a Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: REX-Player-armeabi-v7a-signed-${{ env.SHORT_SHA }}
-          path: output/REX-Player-armeabi-v7a-${{ env.SHORT_SHA }}.apk
+          name: Biscuit-Player-armeabi-v7a-signed-${{ env.SHORT_SHA }}
+          path: output/Biscuit-Player-armeabi-v7a-${{ env.SHORT_SHA }}.apk
 
       - name: Upload app-universal Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: REX-Player-universal-signed-${{ env.SHORT_SHA }}
-          path: output/REX-Player-universal-${{ env.SHORT_SHA }}.apk
+          name: Biscuit-Player-universal-signed-${{ env.SHORT_SHA }}
+          path: output/Biscuit-Player-universal-${{ env.SHORT_SHA }}.apk
 
       - name: Upload app-x86 Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: REX-Player-x86-signed-${{ env.SHORT_SHA }}
-          path: output/REX-Player-x86-${{ env.SHORT_SHA }}.apk
+          name: Biscuit-Player-x86-signed-${{ env.SHORT_SHA }}
+          path: output/Biscuit-Player-x86-${{ env.SHORT_SHA }}.apk
 
       - name: Upload app-x86_64 Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: REX-Player-x86_64-signed-${{ env.SHORT_SHA }}
-          path: output/REX-Player-x86_64-${{ env.SHORT_SHA }}.apk
+          name: Biscuit-Player-x86_64-signed-${{ env.SHORT_SHA }}
+          path: output/Biscuit-Player-x86_64-${{ env.SHORT_SHA }}.apk

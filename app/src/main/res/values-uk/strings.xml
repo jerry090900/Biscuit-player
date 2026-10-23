@@ -16,7 +16,7 @@
 	<string name="pref_appearance_category_bottom_nav">Вкладки нижньої панелі</string>
 	<string name="pref_appearance_tab_home_title">Головна / Файли</string>
 	<string name="pref_appearance_tab_home_summary">Показати локальні теки та файловий менеджер</string>
-	<string name="pref_appearance_tab_shorts_title">RexShorts</string>
+	<string name="pref_appearance_tab_shorts_title">Biscuit Shorts</string>
 	<string name="pref_appearance_tab_shorts_summary">Увімкнути стрічку динамічних вертикальних відео</string>
 	<string name="pref_appearance_tab_recents_title">Нещодавно відтворені</string>
 	<string name="pref_appearance_tab_recents_summary">Швидко відновити попередні відеосеанси</string>
@@ -369,11 +369,11 @@
 	<string name="pref_about_donate_paypal_summary">Підтримати розробника на PayPal</string>
 	<string name="pref_about_donate_upi">UPI</string>
 
-	<string name="pref_about_telegram_title">Telegram</string>
-	<string name="pref_about_telegram_channel">Канал Telegram</string>
-	<string name="pref_about_telegram_channel_summary">Приєднуйтесь до нашого каналу для новин та оновлень</string>
-	<string name="pref_about_telegram_group">Група чату Telegram</string>
-	<string name="pref_about_telegram_group_summary">Обговорюйте та спілкуйтеся зі спільнотою</string>
+	<string name="pref_about_telegram_title">Community</string>
+	<string name="pref_about_telegram_channel">GitHub Releases</string>
+	<string name="pref_about_telegram_channel_summary">View Biscuit Player releases and updates</string>
+	<string name="pref_about_telegram_group">GitHub Issues</string>
+	<string name="pref_about_telegram_group_summary">Report bugs and request features</string>
 
 	<string name="player_sheets_add_ext_sub">Додати зовнішні субтитри</string>
 	<string name="player_sheets_add_ext_audio">Додати зовнішні аудіодоріжки</string>
@@ -913,13 +913,13 @@
 	<string name="pref_category_playback_controls">Відтворення та керування</string>
 	<string name="pref_category_file_management">Керування файлами</string>
 	<string name="pref_category_media_settings">Налаштування медіа</string>
-	<string name="pref_category_rexshorts">RexShorts</string>
-	<string name="pref_category_rexshorts_settings">Налаштування RexShorts</string>
+	<string name="pref_category_rexshorts">Biscuit Shorts</string>
+	<string name="pref_category_rexshorts_settings">Налаштування Biscuit Shorts</string>
 	<string name="pref_category_rexshorts_settings_desc">Керування увімкненням/вимкненням, перемішуванням та заблокованим контентом</string>
 	<string name="pref_category_advanced_about">Розширені та Про програму</string>
 
 	<!-- Shorts preference screen -->
-	<string name="pref_enable_rexshorts">Увімкнути RexShorts</string>
+	<string name="pref_enable_rexshorts">Увімкнути Biscuit Shorts</string>
 	<string name="pref_enable_rexshorts_summary">Показувати вкладку Shorts у нижній панелі навігації</string>
 	<string name="pref_auto_swipe_shorts">Авто-свайп до наступного короткого відео</string>
 	<string name="pref_auto_swipe_shorts_summary">Автоматично свайпати до наступного короткого відео при завершенні поточного</string>
@@ -1011,18 +1011,18 @@
 	<string name="allow_access">ДОЗВОЛИТИ ДОСТУП</string>
 	<string name="why_do_i_see_this">Чому я це бачу?</string>
 	<string name="why_this_permission_is_needed">Навіщо потрібен цей дозвіл</string>
-	<string name="permission_explanation_playstore_intro">mpvRex потребує доступу до ваших відеофайлів для забезпечення основної функціональності як медіаплеєр.</string>
+	<string name="permission_explanation_playstore_intro">Biscuit Player потребує доступу до ваших відеофайлів для забезпечення основної функціональності як медіаплеєр.</string>
 	<string name="permission_used_exclusively_for">Дозвіл використовується виключно для:</string>
 	<string name="permission_usage_bullet_list">• Виявлення та відображення ваших відеофайлів\n• Відтворення медіаконтенту\n• Завантаження файлів субтитрів</string>
-	<string name="permission_explanation_standard_intro">mpvRex завжди вимагав дозволу на доступ до сховища, оскільки це необхідно для програми для пошуку всіх медіафайлів та файлів субтитрів на вашому пристрої, включно з тими, які не підтримуються системою.</string>
+	<string name="permission_explanation_standard_intro">Biscuit Player завжди вимагав дозволу на доступ до сховища, оскільки це необхідно для програми для пошуку всіх медіафайлів та файлів субтитрів на вашому пристрої, включно з тими, які не підтримуються системою.</string>
 	<string name="permission_security_policy_change">Однак через зміну політики безпеки програми, створені для Android 11 та вище, тепер вимагають додаткового дозволу для продовження доступу до тих самих файлів.</string>
 	<string name="permission_privacy_assurance_standard">Будь ласка, знайте, що цей дозвіл використовується лише для автоматичного виявлення медіафайлів/субтитрів на вашому пристрої і не дозволить нам отримати доступ до приватних файлів даних, збережених іншими програмами, будь-яким чином.</string>
-	<string name="opensource_github_notice">mpvRex - це проект з відкритим вихідним кодом. Ви можете переглянути вихідний код і перевірити, як використовуються дозволи, відвідавши наш репозиторій GitHub за адресою:</string>
+	<string name="opensource_github_notice">Biscuit Player - це проект з відкритим вихідним кодом. Ви можете переглянути вихідний код і перевірити, як використовуються дозволи, відвідавши наш репозиторій GitHub за адресою:</string>
 	<string name="privacy_assurance_final">Будьте спокійні, ваша конфіденційність - наш найвищий пріоритет, і ми ні отримуємо доступ до ваших файлів для інших цілей, ні передаємо або зберігаємо їх на наших серверах. Вони залишаються в безпеці на вашому пристрої.</string>
 
-	<string name="permission_required_photos_videos">mpvRex потребує дозволу \"Фото та відео\" для доступу та відтворення ваших відеофайлів, збережених на пристрої.</string>
-	<string name="permission_required_storage">mpvRex потребує дозволу \"Сховище\" для доступу та відтворення ваших медіафайлів, збережених на пристрої.</string>
-	<string name="permission_required_all_files">mpvRex потребує дозволу \"Доступ до всіх файлів\" для виявлення медіа та субтитрів на вашому пристрої через зміну політики безпеки в Android 11 та пізніших версіях.</string>
+	<string name="permission_required_photos_videos">Biscuit Player потребує дозволу \"Фото та відео\" для доступу та відтворення ваших відеофайлів, збережених на пристрої.</string>
+	<string name="permission_required_storage">Biscuit Player потребує дозволу \"Сховище\" для доступу та відтворення ваших медіафайлів, збережених на пристрої.</string>
+	<string name="permission_required_all_files">Biscuit Player потребує дозволу \"Доступ до всіх файлів\" для виявлення медіа та субтитрів на вашому пристрої через зміну політики безпеки в Android 11 та пізніших версіях.</string>
 	<string name="permission_explanation_tiramisu_plus">На Android 13 та вище цей дозвіл дозволяє програмі читати відеофайли зі сховища вашого пристрою, включно з теками Завантаження, Фільми та DCIM.</string>
 	<string name="permission_explanation_pre_tiramisu">Цей дозвіл дозволяє програмі читати медіафайли зі сховища вашого пристрою для відтворення відео та аудіо.</string>
 
@@ -1322,12 +1322,12 @@
 	<string name="pref_appearance_language_title">Мова програми</string>
 	<string name="pref_appearance_language_summary">Змінити мову відображення програми</string>
 
-	<string name="welcome_title">Ласкаво просимо до mpvRex</string>
+	<string name="welcome_title">Ласкаво просимо до Biscuit Player</string>
 	<string name="welcome_subtitle">Ваш сучасний, потужний та налаштовуваний медіаплеєр.</string>
 	<string name="welcome_language_section_title">Бажана мова</string>
 	<string name="welcome_language_section_desc">Оберіть мову відображення</string>
 	<string name="storage_access_granted">Доступ до сховища надано</string>
-	<string name="storage_access_granted_desc">Дозвіл надано. mpvRex готовий до виявлення та відтворення ваших медіафайлів.</string>
+	<string name="storage_access_granted_desc">Дозвіл надано. Biscuit Player готовий до виявлення та відтворення ваших медіафайлів.</string>
 	<string name="welcome_grant_permission">Надати дозвіл</string>
 	<string name="welcome_get_started">Почати</string>
 	<string name="welcome_skip_permission">Продовжити без доступу до сховища</string>

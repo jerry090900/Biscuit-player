@@ -51,7 +51,7 @@ class YtDlClient(
 
     /**
      * Cryptographically verifies that the installed add-on package is signed by
-     * the exact same developer certificate as REX Player.
+     * the exact same developer certificate as Biscuit Player.
      */
     fun isAddonAuthentic(): Boolean {
         if (!isAddonInstalled()) return false

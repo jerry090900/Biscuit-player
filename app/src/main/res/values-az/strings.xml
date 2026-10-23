@@ -15,7 +15,7 @@
     <string name="pref_appearance_category_bottom_nav">Aşağı naviqasiya vərəqləri</string>
     <string name="pref_appearance_tab_home_title">Əsas səhifə / fayllar</string>
     <string name="pref_appearance_tab_home_summary">Lokal qovluqları və fayl bələdçisini göstər</string>
-    <string name="pref_appearance_tab_shorts_title">RexShorts</string>
+    <string name="pref_appearance_tab_shorts_title">Biscuit Shorts</string>
     <string name="pref_appearance_tab_shorts_summary">Sürətli şaquli video lentlərini aktivləşdir və ya söndür</string>
     <string name="pref_appearance_tab_recents_title">Son oynadılanlar</string>
     <string name="pref_appearance_tab_recents_summary">Əvvəlki videolara baxmağa qaldığın yerdən tez davam et</string>
@@ -383,11 +383,11 @@
     <string name="pref_about_donate_paypal_summary">PayPal vasitəsilə tərtibatçıya dəstək ol</string>
     <string name="pref_about_donate_upi">UPI</string>
 
-    <string name="pref_about_telegram_title">Telegram</string>
-    <string name="pref_about_telegram_channel">Telegram kanalı</string>
-    <string name="pref_about_telegram_channel_summary">Yeniləmələr və xəbərlər üçün kanalımıza qoşul</string>
-    <string name="pref_about_telegram_group">Telegram söhbət qrupu</string>
-    <string name="pref_about_telegram_group_summary">İcma ilə müzakirə et və söhbətləş</string>
+    <string name="pref_about_telegram_title">Community</string>
+    <string name="pref_about_telegram_channel">GitHub Releases</string>
+    <string name="pref_about_telegram_channel_summary">View Biscuit Player releases and updates</string>
+    <string name="pref_about_telegram_group">GitHub Issues</string>
+    <string name="pref_about_telegram_group_summary">Report bugs and request features</string>
 
     <string name="player_sheets_add_ext_sub">Xarici altyazılar əlavə et</string>
     <string name="player_sheets_add_ext_audio">Xarici səs cığırları əlavə et</string>
@@ -938,13 +938,13 @@
     <string name="pref_category_playback_controls">Oynatma və idarəetmə</string>
     <string name="pref_category_file_management">Fayl idarəetməsi</string>
     <string name="pref_category_media_settings">Media parametrləri</string>
-    <string name="pref_category_rexshorts">RexShorts</string>
-    <string name="pref_category_rexshorts_settings">RexShorts parametrləri</string>
+    <string name="pref_category_rexshorts">Biscuit Shorts</string>
+    <string name="pref_category_rexshorts_settings">Biscuit Shorts parametrləri</string>
     <string name="pref_category_rexshorts_settings_desc">Aktivləşdirməni, söndürməni, qarışdırmanı və bloklanmış məzmunu idarə et</string>
     <string name="pref_category_advanced_about">Əlavə parametrlər və haqqında</string>
 
     <!-- Shorts preference screen -->
-    <string name="pref_enable_rexshorts">RexShorts funksiyasını aktivləşdir</string>
+    <string name="pref_enable_rexshorts">Biscuit Shorts funksiyasını aktivləşdir</string>
     <string name="pref_enable_rexshorts_summary">Aşağı naviqasiya panelində qısa videolar vərəqini göstər</string>
     <string name="pref_auto_swipe_shorts">Növbəti qısa videoya avtomatik keçid</string>
     <string name="pref_auto_swipe_shorts_summary">Cari qısa video bitdikdə növbətisinə avtomatik sürüşdür</string>
@@ -1034,18 +1034,18 @@
     <string name="allow_access">Girişə icazə ver</string>
     <string name="why_do_i_see_this">Bunu niyə görürəm?</string>
     <string name="why_this_permission_is_needed">Bu icazə niyə lazımdır</string>
-    <string name="permission_explanation_playstore_intro">mpvRex media oynadıcısı kimi əsas funksiyalarını yerinə yetirmək üçün video fayllarınıza giriş tələb edir.</string>
+    <string name="permission_explanation_playstore_intro">Biscuit Player media oynadıcısı kimi əsas funksiyalarını yerinə yetirmək üçün video fayllarınıza giriş tələb edir.</string>
     <string name="permission_used_exclusively_for">İcazə yalnız bunlar üçün istifadə olunur:</string>
     <string name="permission_usage_bullet_list">• Video fayllarınızın tapılması və göstərilməsi\n• Media məzmununun oynadılması\n• Altyazı fayllarının yüklənməsi</string>
-    <string name="permission_explanation_standard_intro">mpvRex həmişə yaddaşa giriş icazəsi tələb edib, çünki bu icazə tətbiqin cihazınızdakı bütün media və altyazı fayllarını, o cümlədən sistemin dəstəkləmədiyi faylları tapması üçün vacibdir.</string>
+    <string name="permission_explanation_standard_intro">Biscuit Player həmişə yaddaşa giriş icazəsi tələb edib, çünki bu icazə tətbiqin cihazınızdakı bütün media və altyazı fayllarını, o cümlədən sistemin dəstəkləmədiyi faylları tapması üçün vacibdir.</string>
     <string name="permission_security_policy_change">Lakin təhlükəsizlik siyasətindəki dəyişikliyə görə Android 11 və daha yeni versiyalar üçün hazırlanmış tətbiqlərin həmin fayllara girişini davam etdirməsi üçün indi əlavə icazə tələb olunur.</string>
     <string name="permission_privacy_assurance_standard">Bu icazə yalnız cihazınızdakı media və altyazı fayllarını avtomatik aşkar etmək üçün istifadə olunur və digər tətbiqlərin saxladığı şəxsi məlumat fayllarına heç bir şəkildə daxil olmağımıza imkan vermir.</string>
-    <string name="opensource_github_notice">mpvRex açıq mənbəli layihədir. Mənbə kodunu nəzərdən keçirmək və icazələrin necə istifadə olunduğunu yoxlamaq üçün GitHub repozitoriyamıza keçin:</string>
+    <string name="opensource_github_notice">Biscuit Player açıq mənbəli layihədir. Mənbə kodunu nəzərdən keçirmək və icazələrin necə istifadə olunduğunu yoxlamaq üçün GitHub repozitoriyamıza keçin:</string>
     <string name="privacy_assurance_final">Əmin olun, məxfiliyiniz bizim üçün ən yüksək prioritetdir. Fayllarınıza başqa məqsədlərlə daxil olmur, onları serverlərimizə ötürmür və orada saxlamırıq. Fayllarınız cihazınızda təhlükəsiz qalır.</string>
     
-    <string name="permission_required_photos_videos">mpvRex cihazınızda saxlanan video fayllarına daxil olmaq və onları oynatmaq üçün \"Foto və videolar\" icazəsini tələb edir.</string>
-    <string name="permission_required_storage">mpvRex cihazınızda saxlanan media fayllarına daxil olmaq və onları oynatmaq üçün \"Yaddaş\" icazəsini tələb edir.</string>
-    <string name="permission_required_all_files">Android 11 və sonrakı versiyalarda təhlükəsizlik siyasəti dəyişdiyi üçün mpvRex cihazınızdakı media və altyazıları aşkar etmək üçün \"Bütün fayllara giriş\" icazəsini tələb edir.</string>
+    <string name="permission_required_photos_videos">Biscuit Player cihazınızda saxlanan video fayllarına daxil olmaq və onları oynatmaq üçün \"Foto və videolar\" icazəsini tələb edir.</string>
+    <string name="permission_required_storage">Biscuit Player cihazınızda saxlanan media fayllarına daxil olmaq və onları oynatmaq üçün \"Yaddaş\" icazəsini tələb edir.</string>
+    <string name="permission_required_all_files">Android 11 və sonrakı versiyalarda təhlükəsizlik siyasəti dəyişdiyi üçün Biscuit Player cihazınızdakı media və altyazıları aşkar etmək üçün \"Bütün fayllara giriş\" icazəsini tələb edir.</string>
     <string name="permission_explanation_tiramisu_plus">Android 13 və sonrakı versiyalarda bu icazə tətbiqə cihazınızın yaddaşından, o cümlədən endirmələr, filmlər və DCIM qovluqlarından video fayllarını oxumağa imkan verir.</string>
     <string name="permission_explanation_pre_tiramisu">Bu icazə tətbiqə video və audio oynatmaq üçün cihazınızın yaddaşından media fayllarını oxumağa imkan verir.</string>
 
@@ -1346,12 +1346,12 @@
     <string name="pref_appearance_language_title">Tətbiqin dili</string>
     <string name="pref_appearance_language_summary">Tətbiqin interfeys dilini dəyiş</string>
 
-    <string name="welcome_title">mpvRex tətbiqinə xoş gəlmisiniz</string>
+    <string name="welcome_title">Biscuit Player tətbiqinə xoş gəlmisiniz</string>
     <string name="welcome_subtitle">Müasir, güclü və fərdiləşdirilə bilən media oynadıcınız.</string>
     <string name="welcome_language_section_title">Üstünlük verilən dil</string>
     <string name="welcome_language_section_desc">İnterfeys dilini seçin</string>
     <string name="storage_access_granted">Yaddaşa giriş icazəsi verilib</string>
-    <string name="storage_access_granted_desc">İcazə verilib. mpvRex media fayllarınızı aşkar etməyə və oynatmağa hazırdır.</string>
+    <string name="storage_access_granted_desc">İcazə verilib. Biscuit Player media fayllarınızı aşkar etməyə və oynatmağa hazırdır.</string>
     <string name="welcome_grant_permission">İcazə ver</string>
     <string name="welcome_get_started">Başla</string>
     <string name="welcome_skip_permission">Yaddaşa giriş olmadan davam et</string>

@@ -14,7 +14,7 @@ android {
   compileSdk = 36
 
   defaultConfig {
-    applicationId = "xyz.mpv.rex"
+    applicationId = "app.biscuit.player"
     minSdk = 26
     targetSdk = 36
     versionCode = 214
