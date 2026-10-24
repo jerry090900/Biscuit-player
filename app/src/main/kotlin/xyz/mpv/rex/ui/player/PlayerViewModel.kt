@@ -170,7 +170,7 @@ class PlayerViewModel(
     playbackManager = _playbackManager,
     scope = viewModelScope,
     onShowToast = { showToast(it) },
-    resolveUri = { it.resolveUri(host.context) },
+    context = host.context,
     onPreciseDurationChanged = { _preciseDuration.value = it }
   )
   val trackManager: TrackManager get() = _trackManager
@@ -621,7 +621,7 @@ class PlayerViewModel(
             val time = if (_isLoadingFile.value) null else MPVLib.getPropertyDouble("time-pos")
             if (time != null) {
               val primaryDur = primaryVideoDuration.value
-              if (externalAudioTracks.isNotEmpty() && primaryDur != null && primaryDur > 0) {
+              if (_trackManager.hasExternalAudio && primaryDur != null && primaryDur > 0) {
                 if (time >= primaryDur - 0.25) {
                   _precisePosition.value = primaryDur.toFloat()
                   _externalAudioEofEvent.tryEmit(Unit)
@@ -643,7 +643,7 @@ class PlayerViewModel(
         val time = if (_isLoadingFile.value) null else MPVLib.getPropertyDouble("time-pos")
         if (time != null) {
           val primaryDur = primaryVideoDuration.value
-          if (externalAudioTracks.isNotEmpty() && primaryDur != null && primaryDur > 0) {
+          if (_trackManager.hasExternalAudio && primaryDur != null && primaryDur > 0) {
             if (time >= primaryDur - 0.25) {
               _precisePosition.value = primaryDur.toFloat()
               _externalAudioEofEvent.tryEmit(Unit)
@@ -660,10 +660,10 @@ class PlayerViewModel(
       MPVLib.propInt["duration"].collect { _ ->
         val dur = MPVLib.getPropertyDouble("duration")
         if (dur != null && dur > 0) {
-          if (externalAudioTracks.isEmpty()) {
+          if (!_trackManager.hasExternalAudio) {
             _trackManager.setPrimaryVideoDuration(dur)
           }
-          val effectiveDur = if (externalAudioTracks.isNotEmpty() && (primaryVideoDuration.value ?: 0.0) > 0.0) {
+          val effectiveDur = if (_trackManager.hasExternalAudio && (primaryVideoDuration.value ?: 0.0) > 0.0) {
             primaryVideoDuration.value!!
           } else {
             dur
@@ -671,7 +671,7 @@ class PlayerViewModel(
           _preciseDuration.value = effectiveDur.toFloat()
 
         } else if (dur == null || dur <= 0) {
-          if (externalAudioTracks.isEmpty()) {
+          if (!_trackManager.hasExternalAudio) {
             _trackManager.setPrimaryVideoDuration(null)
             _preciseDuration.value = 0f
           }
@@ -743,8 +743,9 @@ class PlayerViewModel(
 
   // ==================== Audio/Subtitle Management ====================
 
-  fun addAudio(uri: Uri, select: Boolean = true, silent: Boolean = false) =
-    _trackManager.addAudio(uri, select, silent)
+  fun addAudio(uri: Uri, select: Boolean = true, silent: Boolean = false) {
+    if (!_isLoadingFile.value) _trackManager.addAudio(uri, select, silent)
+  }
 
   fun addRemoteAudio(url: String, label: String? = null, select: Boolean = false, lang: String? = null) =
     _trackManager.addRemoteAudio(url, label, select, lang)
@@ -773,10 +774,11 @@ class PlayerViewModel(
   }
 
   fun onFileStartLoading(isNetwork: Boolean = false) {
+    _trackManager.cancelPendingAudio()
     _isLoadingFile.value = true
     _isLoadingUrl.value = isNetwork
     _isNetworkStream.value = isNetwork
-    if (externalAudioTracks.isEmpty()) {
+    if (!_trackManager.hasExternalAudio) {
       _precisePosition.value = 0f
       if (primaryVideoDuration.value == null) {
         _preciseDuration.value = 0f
@@ -794,6 +796,7 @@ class PlayerViewModel(
   }
 
   fun onQualitySwitchLoading() {
+    _trackManager.cancelPendingAudio()
     _isLoadingFile.value = true
     _isLoadingUrl.value = true
     _isNetworkStream.value = true
@@ -803,7 +806,7 @@ class PlayerViewModel(
     _isLoadingFile.value = false
     _isLoadingUrl.value = false
     if (durationSec > 0) {
-      if (externalAudioTracks.isEmpty()) {
+      if (!_trackManager.hasExternalAudio) {
         _trackManager.setPrimaryVideoDuration(durationSec)
         _preciseDuration.value = durationSec.toFloat()
       }
@@ -2055,6 +2058,7 @@ class PlayerViewModel(
   override fun onCleared() {
     super.onCleared()
     _playbackManager.cancelPendingJobs()
+    _trackManager.releaseExternalAudio()
     ambientController.cleanup()
     videoFlipFilterManager.reset()
   }

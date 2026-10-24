@@ -1,15 +1,17 @@
 package xyz.mpv.rex.ui.player.managers
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import `is`.xyz.mpv.MPVLib
+import xyz.mpv.rex.ui.player.audio.*
+import xyz.mpv.rex.ui.player.MPVLifecycleLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import xyz.mpv.rex.preferences.SubtitlesPreferences
 import xyz.mpv.rex.ui.player.TrackNode
 import xyz.mpv.rex.ui.player.TrackSelector
@@ -23,7 +25,7 @@ class TrackManager(
   private val playbackManager: PlaybackManager,
   private val scope: CoroutineScope,
   private val onShowToast: (String) -> Unit,
-  private val resolveUri: (Uri) -> String?,
+  private val context: Context,
   private val onPreciseDurationChanged: ((Float) -> Unit)? = null,
 ) {
   companion object {
@@ -32,7 +34,7 @@ class TrackManager(
 
   private val _externalAudioTracks = mutableListOf<String>()
   val externalAudioTracks: List<String>
-    get() = synchronized(_externalAudioTracks) { _externalAudioTracks.toList() }
+    get() = (synchronized(_externalAudioTracks) { _externalAudioTracks.toList() } + localAudio.identities.value).distinct()
 
   private val _externalAudioLabels = MutableStateFlow<Map<String, String>>(emptyMap())
   val externalAudioLabels: StateFlow<Map<String, String>> = _externalAudioLabels.asStateFlow()
@@ -41,55 +43,84 @@ class TrackManager(
   val primaryVideoDuration: StateFlow<Double?> = _primaryVideoDuration.asStateFlow()
 
   val isExternalAudioActive: Boolean
-    get() = synchronized(_externalAudioTracks) { _externalAudioTracks.isNotEmpty() } && (_primaryVideoDuration.value ?: 0.0) > 0.0
+    get() = hasExternalAudio && (_primaryVideoDuration.value ?: 0.0) > 0.0
+
+  private val localAudio = ExternalAudioController(
+    scope = CoroutineScope(scope.coroutineContext + Dispatchers.IO),
+    port = object : ExternalAudioPort {
+      override fun primaryPath(): String? = if (MPVLifecycleLock.isNativeInitialized) {
+        runCatching { MPVLib.getPropertyString("path") }.getOrNull()
+      } else null
+
+      override suspend fun open(identity: String): ExternalAudioSource {
+        val source = openExternalAudioSource(context, identity)
+        val name = externalAudioDisplayName(context, identity)
+        _externalAudioLabels.value = _externalAudioLabels.value + (source.path to name)
+        return source
+      }
+
+      override fun add(path: String) {
+        check(MPVLifecycleLock.isNativeInitialized) { "Player is not ready" }
+        MPVLib.command("audio-add", path, "cached")
+      }
+
+      override fun discard(path: String) {
+        if (!MPVLifecycleLock.isNativeInitialized) return
+        tracks().filter { it.sourcePath == path }.forEach { MPVLib.command("audio-remove", it.id.toString()) }
+      }
+
+      override fun tracks(): List<ExternalAudioTrack> {
+        if (!MPVLifecycleLock.isNativeInitialized) return emptyList()
+        val count = MPVLib.getPropertyInt("track-list/count") ?: return emptyList()
+        return (0 until count).mapNotNull { i ->
+          if (MPVLib.getPropertyString("track-list/$i/type") != "audio" ||
+            MPVLib.getPropertyBoolean("track-list/$i/external") != true) return@mapNotNull null
+          ExternalAudioTrack(
+            id = MPVLib.getPropertyInt("track-list/$i/id") ?: return@mapNotNull null,
+            sourcePath = MPVLib.getPropertyString("track-list/$i/external-filename") ?: return@mapNotNull null,
+            title = MPVLib.getPropertyString("track-list/$i/title"),
+            language = MPVLib.getPropertyString("track-list/$i/lang"),
+            codec = MPVLib.getPropertyString("track-list/$i/codec"),
+          )
+        }
+      }
+
+      override fun select(id: Int) {
+        check(MPVLifecycleLock.isNativeInitialized) { "Player is not ready" }
+        MPVLib.setPropertyInt("aid", id)
+        check(MPVLib.getPropertyInt("aid") == id) { "Audio track could not be selected" }
+      }
+    },
+    onAttached = {
+      _primaryVideoDuration.value?.takeIf { it > 0 }?.let { onPreciseDurationChanged?.invoke(it.toFloat()) }
+    },
+    onSelected = { showLocalAudioToast(xyz.mpv.rex.R.string.external_audio_selected) },
+    onFailure = { error ->
+      Log.w(TAG, "External audio attachment failed", error)
+      showLocalAudioToast(xyz.mpv.rex.R.string.external_audio_failed)
+    },
+  )
+  private fun showLocalAudioToast(message: Int) {
+    val session = localAudio.sessionId
+    scope.launch(Dispatchers.Main) {
+      if (localAudio.sessionId == session) onShowToast(context.getString(message))
+    }
+  }
+
+  val externalAudioSessionId: Long get() = localAudio.sessionId
+  val externalAudioChoice = localAudio.choice
+  val hasExternalAudio: Boolean get() = externalAudioTracks.isNotEmpty() || localAudio.busy.value
+
+  fun chooseExternalAudio(choice: ExternalAudioChoice, id: Int) = localAudio.choose(choice, id)
+  fun dismissExternalAudioChoice() = localAudio.dismissChoice()
+  fun cancelPendingAudio() = localAudio.cancelPending()
+  fun releaseExternalAudio() = localAudio.invalidate()
 
   fun addAudio(uri: Uri, select: Boolean = true, silent: Boolean = false) {
-    scope.launch(Dispatchers.IO) {
-      runCatching {
-        // Save primary video duration before adding external audio if not saved yet
-        if (_primaryVideoDuration.value == null || (_primaryVideoDuration.value ?: 0.0) <= 0.0) {
-          val currentDur = MPVLib.getPropertyDouble("duration")
-          if (currentDur != null && currentDur > 0) {
-            _primaryVideoDuration.value = currentDur
-          }
-        }
-
-        val path =
-          resolveUri(uri)
-            ?: return@launch withContext(Dispatchers.Main) {
-              if (!silent) onShowToast("Failed to load audio file: Invalid URI")
-            }
-
-        synchronized(_externalAudioTracks) {
-          val uriStr = uri.toString()
-          if (!_externalAudioTracks.contains(uriStr)) {
-            _externalAudioTracks.add(uriStr)
-          }
-        }
-
-        val flag = if (select) "select" else "cached"
-        MPVLib.command("audio-add", path, flag)
-
-        _primaryVideoDuration.value?.let { primDur ->
-          if (primDur > 0) {
-            onPreciseDurationChanged?.invoke(primDur.toFloat())
-          }
-        }
-
-        if (!silent) {
-          withContext(Dispatchers.Main) {
-            onShowToast("Audio track added")
-          }
-        }
-      }.onFailure { e ->
-        if (!silent) {
-          withContext(Dispatchers.Main) {
-            onShowToast("Failed to load audio: ${e.message}")
-          }
-        }
-        Log.e(TAG, "Error adding audio", e)
-      }
+    if (_primaryVideoDuration.value == null || (_primaryVideoDuration.value ?: 0.0) <= 0) {
+      _primaryVideoDuration.value = MPVLib.getPropertyDouble("duration")?.takeIf { it > 0 }
     }
+    localAudio.attach(uri.toString(), select = select, interactive = !silent)
   }
 
   /**
@@ -225,6 +256,7 @@ class TrackManager(
   }
 
   fun resetExternalAudioTracks() {
+    localAudio.invalidate()
     synchronized(_externalAudioTracks) {
       _externalAudioTracks.clear()
     }

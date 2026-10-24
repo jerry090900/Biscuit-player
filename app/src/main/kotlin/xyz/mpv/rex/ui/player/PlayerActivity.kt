@@ -1094,6 +1094,7 @@ class PlayerActivity :
 
     isUserFinishing = true
     player.isExiting = true
+    viewModel.trackManager.cancelPendingAudio()
     viewModel.playbackManager.cancelPendingJobs()
     miniPlayerStateManager.clearState()
     finish()
@@ -1171,6 +1172,7 @@ class PlayerActivity :
   override fun onDestroy() {
     Log.d(TAG, "PlayerActivity onDestroy")
     player.isExiting = true
+    viewModel.trackManager.cancelPendingAudio()
     viewModel.playbackManager.cancelPendingJobs()
     runCatching { remoteClient.onPlayerFinished() }
 
@@ -1226,6 +1228,7 @@ class PlayerActivity :
     if (!isFinishing || isManualBackgroundPlayback) return
 
     player.isExiting = true
+    viewModel.trackManager.cancelPendingAudio()
     viewModel.playbackManager.cancelPendingJobs()
 
     // Stop media notification service when activity is destroyed

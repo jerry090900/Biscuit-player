@@ -1,6 +1,17 @@
 package xyz.mpv.rex.ui.player.controls
 
 import android.net.Uri
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import xyz.mpv.rex.R
+import xyz.mpv.rex.ui.player.audio.ExternalAudioSources
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -82,6 +93,34 @@ fun PlayerSheets(
   onShowSheet: (Sheets) -> Unit,
   onDismissRequest: () -> Unit,
 ) {
+  val audioChoice by viewModel.trackManager.externalAudioChoice.composeCollectAsState()
+  audioChoice?.let { choice ->
+    AlertDialog(
+      onDismissRequest = viewModel.trackManager::dismissExternalAudioChoice,
+      title = { Text(stringResource(R.string.external_audio_choose_track)) },
+      text = {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+          choice.tracks.forEachIndexed { index, track ->
+            val label = listOfNotNull(
+              track.title?.takeIf { it.isNotBlank() },
+              track.language?.takeIf { it.isNotBlank() },
+              track.codec?.takeIf { it.isNotBlank() },
+            ).joinToString(" · ")
+            TextButton(
+              modifier = Modifier.fillMaxWidth(),
+              onClick = { viewModel.trackManager.chooseExternalAudio(choice, track.id) },
+            ) { Text("${index + 1}: $label") }
+          }
+        }
+      },
+      confirmButton = {},
+      dismissButton = {
+        TextButton(onClick = viewModel.trackManager::dismissExternalAudioChoice) {
+          Text(stringResource(android.R.string.cancel))
+        }
+      },
+    )
+  }
   when (sheetShown) {
     Sheets.None -> {}
     Sheets.SubtitleTracks -> {
@@ -219,12 +258,13 @@ fun PlayerSheets(
     }
 
     Sheets.AudioTracks -> {
+      var pickerSession by remember { mutableStateOf<Long?>(null) }
       val audioPicker =
         rememberLauncherForActivityResult(
           ActivityResultContracts.OpenDocument(),
         ) {
           if (it == null) return@rememberLauncherForActivityResult
-          onAddAudio(it)
+          if (pickerSession == viewModel.trackManager.externalAudioSessionId) onAddAudio(it)
         }
 
       val audioPreferences = koinInject<xyz.mpv.rex.preferences.AudioPreferences>()
@@ -251,7 +291,7 @@ fun PlayerSheets(
 
           xyz.mpv.rex.ui.browser.dialogs.FilePickerDialog(
               isOpen = true,
-              title = "Select Audio Track",
+              title = stringResource(R.string.external_audio_select_source),
               currentPath = initialPath,
               onDismiss = { showFilePicker = false },
               onPathChanged = { path ->
@@ -261,23 +301,26 @@ fun PlayerSheets(
               },
               onFileSelected = { path ->
                   showFilePicker = false
-                  onAddAudio(Uri.parse("file://$path"))
+                  if (pickerSession == viewModel.trackManager.externalAudioSessionId) {
+                    onAddAudio(Uri.fromFile(java.io.File(path)))
+                  }
               },
               onSystemPickerRequest = {
                   showFilePicker = false
-                  audioPicker.launch(arrayOf("*/*"))
+                  audioPicker.launch(ExternalAudioSources.mimeTypes)
               },
               matchToName = matchToName,
-              allowedExtensions = listOf(
-                "mp3", "m4a", "ogg", "flac", "wav", "opus", "aac", "wma", "ac3", "eac3", "dts", "mka", "m4b", "ape"
-              )
+              allowedExtensions = ExternalAudioSources.extensions.toList()
           )
       }
 
       AudioTracksSheet(
         tracks = audioTracks,
         onSelect = onSelectAudio,
-        onAddAudioTrack = { showFilePicker = true },
+        onAddAudioTrack = {
+          pickerSession = viewModel.trackManager.externalAudioSessionId
+          showFilePicker = true
+        },
         onOpenDelayPanel = { onOpenPanel(Panels.AudioDelay) },
         onDismissRequest,
         alternateTracks = alternateAudio,

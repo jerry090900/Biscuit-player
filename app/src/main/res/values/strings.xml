@@ -1519,4 +1519,8 @@
     <string name="web_share_step_2">Scan QR code or type URL in any browser</string>
     <string name="web_share_stop_sharing">Stop Sharing</string>
 
+    <string name="external_audio_select_source">Select audio or video file</string>
+    <string name="external_audio_choose_track">Choose external audio track</string>
+    <string name="external_audio_selected">External audio selected</string>
+    <string name="external_audio_failed">Could not load audio. Check file access and that the source contains a readable audio track.</string>
 </resources>
