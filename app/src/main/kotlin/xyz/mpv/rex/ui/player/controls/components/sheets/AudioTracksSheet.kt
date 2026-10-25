@@ -18,6 +18,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.TextButton
+import xyz.mpv.rex.domain.audio.RememberedAudioSource
 import androidx.compose.material3.Text
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
@@ -49,6 +51,10 @@ fun AudioTracksSheet(
   modifier: Modifier = Modifier,
   alternateTracks: ImmutableList<xyz.mpv.rex.domain.ytdl.model.AudioTrack> = persistentListOf(),
   onSelectAlternate: (xyz.mpv.rex.domain.ytdl.model.AudioTrack) -> Unit = {},
+  rememberedSources: List<RememberedAudioSource> = emptyList(),
+  onUseRemembered: (String) -> Unit = {},
+  onReplaceRemembered: (String) -> Unit = {},
+  onForgetRemembered: (String) -> Unit = {},
 ) {
   val audioPreferences = koinInject<AudioPreferences>()
   val audioChannels by audioPreferences.audioChannels.collectAsState()
@@ -76,6 +82,18 @@ fun AudioTracksSheet(
     },
     footer = {
       Column {
+        rememberedSources.forEach { source ->
+          Column(Modifier.fillMaxWidth().padding(12.dp)) {
+            Text(source.displayName, style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(if (source.lastFailure != null) R.string.remembered_audio_missing else R.string.remembered_audio_saved), style = MaterialTheme.typography.bodySmall)
+            if (!source.persistableRead) Text(stringResource(R.string.remembered_audio_temporary), style = MaterialTheme.typography.bodySmall)
+            Row {
+              TextButton(onClick = { onUseRemembered(source.sourceUri) }) { Text(stringResource(R.string.remembered_audio_use)) }
+              TextButton(onClick = { onReplaceRemembered(source.sourceUri) }) { Text(stringResource(R.string.remembered_audio_replace)) }
+              TextButton(onClick = { onForgetRemembered(source.sourceUri) }) { Text(stringResource(R.string.remembered_audio_forget)) }
+            }
+          }
+        }
         if (alternateTracks.isNotEmpty()) {
           Text(
             text = "Other audio languages",

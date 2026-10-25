@@ -1982,6 +1982,13 @@ class PlayerActivity :
     needsAspectReapply = true
     isPlaybackStateLoaded = false
 
+    val audioSessionToken = viewModel.trackManager.externalAudioSessionId
+    val audioPlaylist = viewModel.playlistManager.playlist.value
+    val audioPlaylistUri = audioPlaylist.getOrNull(viewModel.playlistManager.currentIndex.value)
+    val audioPrimaryUri = audioPlaylistUri ?: extractUriFromIntent(intent)
+    val audioNetworkId = intent.getLongExtra("network_connection_id", -1L).takeIf { it >= 0 && audioPlaylistUri == null }
+    val audioNetworkPath = intent.getStringExtra("network_file_path").takeIf { audioPlaylistUri == null }
+
     val shouldAutoplay = playerPreferences.autoplayOnOpen.get() || isAutoplayNextTriggered
     isAutoplayNextTriggered = false
     isAutoAdvancing = false
@@ -2034,6 +2041,10 @@ class PlayerActivity :
 
       // Apply track selection logic (defaults only apply when no saved state)
       trackSelector.onFileLoaded(hasState)
+      if (viewModel.trackManager.externalAudioSessionId == audioSessionToken) {
+        val stableAudioId = xyz.mpv.rex.ui.player.audio.primaryAudioIdentity(this@PlayerActivity, audioPrimaryUri, audioNetworkId, audioNetworkPath)
+        viewModel.trackManager.restoreRememberedAudio(stableAudioId)
+      }
 
       // Apply default zoom only if there's no saved state
       if (!hasState) {

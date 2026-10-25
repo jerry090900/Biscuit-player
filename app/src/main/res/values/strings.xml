@@ -1523,4 +1523,11 @@
     <string name="external_audio_choose_track">Choose external audio track</string>
     <string name="external_audio_selected">External audio selected</string>
     <string name="external_audio_failed">Could not load audio. Check file access and that the source contains a readable audio track.</string>
+    <string name="remembered_audio_unavailable">Remembered audio is unavailable. Original video playback continues; reselect a source.</string>
+    <string name="remembered_audio_saved">Remembered external audio</string>
+    <string name="remembered_audio_missing">Remembered source unavailable — reselect or replace</string>
+    <string name="remembered_audio_temporary">Temporary read access; reselection may be needed later</string>
+    <string name="remembered_audio_use">Use</string>
+    <string name="remembered_audio_replace">Replace</string>
+    <string name="remembered_audio_forget">Forget</string>
 </resources>

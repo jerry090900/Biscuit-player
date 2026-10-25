@@ -303,6 +303,7 @@ class MPVView(
       "demuxer-cache-duration" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
       "cache-buffering-state" to MPVLib.MpvFormat.MPV_FORMAT_INT64,
       "audio-delay" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
+      "aid" to MPVLib.MpvFormat.MPV_FORMAT_INT64,
       "sub-delay" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
       "sub-speed" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,
       "sub-scale" to MPVLib.MpvFormat.MPV_FORMAT_DOUBLE,

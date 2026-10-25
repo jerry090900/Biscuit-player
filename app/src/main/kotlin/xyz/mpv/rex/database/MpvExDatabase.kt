@@ -1,5 +1,9 @@
 package xyz.mpv.rex.database
 
+import xyz.mpv.rex.database.entities.ExternalAudioSourceEntity
+import xyz.mpv.rex.database.entities.AudioTrackPreferenceEntity
+import xyz.mpv.rex.database.entities.MediaAudioSelectionEntity
+import xyz.mpv.rex.database.dao.AudioAssociationDao
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
@@ -25,6 +29,9 @@ import xyz.mpv.rex.domain.network.NetworkConnection
 
 @Database(
   entities = [
+    ExternalAudioSourceEntity::class,
+    AudioTrackPreferenceEntity::class,
+    MediaAudioSelectionEntity::class,
     PlaybackStateEntity::class,
     RecentlyPlayedEntity::class,
     VideoMetadataEntity::class,
@@ -36,11 +43,13 @@ import xyz.mpv.rex.domain.network.NetworkConnection
     HybridMediaRootEntity::class,
     MediaPlayCountEntity::class,
   ],
-  version = 18,
+  version = 19,
   exportSchema = true,
 )
 @TypeConverters(NetworkProtocolConverter::class)
 abstract class MpvExDatabase : RoomDatabase() {
+  abstract fun audioAssociationDao(): AudioAssociationDao
+
   abstract fun videoDataDao(): PlaybackStateDao
 
   abstract fun recentlyPlayedDao(): RecentlyPlayedDao

@@ -39,6 +39,8 @@ class PlayerPlaybackStateController(
     val identifier = activity.mediaIdentifier
     if (identifier.isBlank()) return
 
+    activity.viewModel.trackManager.captureAudioDelay()
+
     // Capture current playback state before switching files
     val currentPos = activity.viewModel.pos ?: 0
     val currentDuration = activity.viewModel.duration ?: 0
@@ -49,18 +51,12 @@ class PlayerPlaybackStateController(
     val currentCustomRatio = activity.viewModel.currentAspectRatio.value
     val currentSid = activity.player.sid
     val currentSecondarySid = activity.player.secondarySid
-    val currentAid = activity.player.aid
     val currentSubDelay = (MPVLib.getPropertyDouble("sub-delay") ?: 0.0)
-    val currentAudioDelay = (MPVLib.getPropertyDouble("audio-delay") ?: 0.0)
     val currentSubSpeed = MPVLib.getPropertyDouble("sub-speed") ?: DEFAULT_SUB_SPEED
     val currentOrientation = activity.requestedOrientation
     val currentExternalSubs = activity.viewModel.externalSubtitles
       .filter { !it.startsWith("http", ignoreCase = true) && !it.startsWith("edl", ignoreCase = true) }
       .toList()
-    val currentExternalAudio = activity.viewModel.externalAudioTracks
-      .filter { !it.startsWith("http", ignoreCase = true) && !it.startsWith("edl", ignoreCase = true) }
-      .toList()
-
     // Cancel any previous pending save operation
     savePlaybackStateJob?.cancel()
 
@@ -111,12 +107,12 @@ class PlayerPlaybackStateController(
             secondarySid = currentSecondarySid,
             subDelay = (currentSubDelay * MILLISECONDS_TO_SECONDS).toInt(),
             subSpeed = currentSubSpeed,
-            aid = currentAid,
-            audioDelay = (currentAudioDelay * MILLISECONDS_TO_SECONDS).toInt(),
+            aid = oldState?.aid ?: -1,
+            audioDelay = oldState?.audioDelay ?: activity.viewModel.trackManager.embeddedDefaultDelayMs,
             timeRemaining = timeRemaining,
             savedOrientation = currentOrientation,
             externalSubtitles = currentExternalSubs.joinToString("|"),
-            externalAudioTracks = currentExternalAudio.joinToString("|"),
+            externalAudioTracks = oldState?.externalAudioTracks.orEmpty(),
             videoAspect = currentAspectToSave,
             customAspectRatio = currentCustomRatioToSave,
             hasBeenWatched = isFinished || progress >= (watchedThreshold / 100f),
@@ -163,7 +159,7 @@ class PlayerPlaybackStateController(
     }
 
     val subDelay = state.subDelay / DELAY_DIVISOR
-    val audioDelay = state.audioDelay / DELAY_DIVISOR
+    val audioDelay = activity.viewModel.trackManager.embeddedDefaultDelayMs / DELAY_DIVISOR
 
     // Restore external subtitles first (local files only)
     if (state.externalSubtitles.isNotBlank()) {
@@ -179,19 +175,8 @@ class PlayerPlaybackStateController(
       }
     }
 
-    // Restore external audio tracks (local files only)
-    if (state.externalAudioTracks.isNotBlank()) {
-      val externalAudioUris = state.externalAudioTracks.split("|").filter { it.isNotBlank() }
-      Log.d(TAG, "Restoring ${externalAudioUris.size} external audio track(s)")
-
-      val lastUri = externalAudioUris.last()
-      for (audioUri in externalAudioUris) {
-        val uri = Uri.parse(audioUri)
-        if (uri.scheme?.startsWith("http") != true && uri.scheme != "edl") {
-          activity.viewModel.addAudio(uri, select = audioUri == lastUri, silent = true)
-        }
-      }
-    }
+    // Phase 3 restores external audio from structured, locator-keyed associations after
+    // default track selection. Filename-only legacy associations are retained, not guessed.
 
     // Always restore subtitle and audio tracks from saved state
     // User's manual selection has highest priority
@@ -205,19 +190,8 @@ class PlayerPlaybackStateController(
       Log.d(TAG, "Restored secondary subtitle track: ${state.secondarySid} (user selection)")
     }
 
-    if (state.aid > 0) {
-      // The saved `aid` is an absolute mpv track id. Alternate audio streams are
-      // injected as external tracks *after* load and get their own ids, so the
-      // numeric value captured earlier may now point at a different (external)
-      // stream. Only re-apply it when it still resolves to a non-external audio
-      // track; otherwise mpv's own default selection wins.
-      if (isRestorableAudioTrackId(state.aid)) {
-        activity.player.aid = state.aid
-        Log.d(TAG, "Restored audio track: ${state.aid} (user selection)")
-      } else {
-        Log.d(TAG, "Skipped restoring stale audio track id ${state.aid} (no longer a primary audio track)")
-      }
-    }
+    // Legacy filename-only audio choices/delays are ambiguous. Keep the data, but let
+    // Phase 3 restore audio solely from a stable primary locator and stream fingerprint.
 
     MPVLib.setPropertyDouble("sub-delay", subDelay)
     MPVLib.setPropertyDouble("speed", state.playbackSpeed)
@@ -311,24 +285,6 @@ class PlayerPlaybackStateController(
       val defaultSubSpeed = activity.subtitlesPreferences.defaultSubSpeed.get().toDouble()
       MPVLib.setPropertyDouble("sub-speed", defaultSubSpeed)
     }
-  }
-
-  /**
-   * Returns true when [trackId] still resolves to a primary (non-external) audio track
-   * in mpv's current track list. Saved audio ids are only meaningful while the track
-   * layout is unchanged; alternate web-audio streams are injected as external tracks
-   * after load and would otherwise collide with a stale numeric id.
-   */
-  private fun isRestorableAudioTrackId(trackId: Int): Boolean {
-    val count = runCatching { MPVLib.getPropertyInt("track-list/count") }.getOrNull() ?: return false
-    for (i in 0 until count) {
-      val id = runCatching { MPVLib.getPropertyInt("track-list/$i/id") }.getOrNull() ?: continue
-      if (id != trackId) continue
-      val type = runCatching { MPVLib.getPropertyString("track-list/$i/type") }.getOrNull()
-      val external = runCatching { MPVLib.getPropertyBoolean("track-list/$i/external") }.getOrNull() ?: false
-      return type == "audio" && !external
-    }
-    return false
   }
 
   /**

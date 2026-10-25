@@ -1,5 +1,8 @@
 package xyz.mpv.rex.ui.player.managers
 
+import xyz.mpv.rex.domain.audio.*
+import kotlinx.coroutines.Job
+import kotlin.math.roundToLong
 import android.content.Context
 import android.net.Uri
 import android.util.Log
@@ -26,6 +29,8 @@ class TrackManager(
   private val scope: CoroutineScope,
   private val onShowToast: (String) -> Unit,
   private val context: Context,
+  private val audioStore: AudioAssociationStore,
+  private val defaultAudioDelayMs: () -> Long,
   private val onPreciseDurationChanged: ((Float) -> Unit)? = null,
 ) {
   companion object {
@@ -44,6 +49,182 @@ class TrackManager(
 
   val isExternalAudioActive: Boolean
     get() = hasExternalAudio && (_primaryVideoDuration.value ?: 0.0) > 0.0
+
+  private val audioState = AudioPersistenceSession(audioStore, defaultAudioDelayMs)
+  val rememberedAudioSources = audioState.sources
+  val embeddedDefaultDelayMs: Int get() = defaultAudioDelayMs().toInt()
+  private var restoreJob: Job? = null
+  private var initializationJob: Job? = null
+  @Volatile private var mediaEpoch = 0L
+  @Volatile private var userAction = 0L
+  @Volatile private var restoring = false
+  @Volatile private var runtimeAid: Int? = null
+  private val selectionGate = Any()
+  @Volatile private var replacement: Pair<String, String>? = null
+
+  private fun delayMs(): Long = ((MPVLib.getPropertyDouble("audio-delay") ?: 0.0) * 1000).roundToLong()
+
+  private fun readAudioTracks(): List<ExternalAudioTrack> {
+    if (!MPVLifecycleLock.isNativeInitialized) return emptyList()
+    val count = MPVLib.getPropertyInt("track-list/count") ?: return emptyList()
+    return (0 until count).mapNotNull { i ->
+      if (MPVLib.getPropertyString("track-list/$i/type") != "audio") return@mapNotNull null
+      val external = MPVLib.getPropertyBoolean("track-list/$i/external") == true
+      ExternalAudioTrack(
+        id = MPVLib.getPropertyInt("track-list/$i/id") ?: return@mapNotNull null,
+        sourcePath = if (external) MPVLib.getPropertyString("track-list/$i/external-filename") ?: return@mapNotNull null else "",
+        title = MPVLib.getPropertyString("track-list/$i/title"), language = MPVLib.getPropertyString("track-list/$i/lang"),
+        codec = MPVLib.getPropertyString("track-list/$i/codec"), streamIndex = MPVLib.getPropertyLong("track-list/$i/ff-index"),
+        sourceId = MPVLib.getPropertyLong("track-list/$i/src-id"), channels = MPVLib.getPropertyString("track-list/$i/demux-channels"),
+        sampleRate = MPVLib.getPropertyLong("track-list/$i/demux-samplerate"),
+      )
+    }
+  }
+
+  private fun persistSelection(source: String, stream: AudioStreamIdentity, expectedAid: Int? = null) {
+    val oldSource = synchronized(selectionGate) {
+      if (expectedAid != null && MPVLib.getPropertyInt("aid") != expectedAid) return
+      val delay = audioState.selected(source, stream, delayMs())
+      runtimeAid = MPVLib.getPropertyInt("aid")
+      MPVLib.setPropertyDouble("audio-delay", delay / 1000.0)
+      replacement?.takeIf { it.second == source }?.let { (old, _) ->
+        replacement = null
+        old.takeUnless { it == source }
+      }
+    }
+    // Do not acquire the attachment lock while holding selectionGate (JNI callbacks use the reverse order).
+    oldSource?.let { audioState.forget(it); localAudio.forget(it) }
+  }
+
+  fun captureAudioDelay() = synchronized(selectionGate) {
+    if (!restoring && MPVLifecycleLock.isNativeInitialized && runtimeAid == MPVLib.getPropertyInt("aid")) {
+      audioState.capture(delayMs())
+    }
+  }
+
+  /** Covers existing delay controls and aid changes made through scripts/other existing controls. */
+  fun observeAudioSelection() {
+    if (restoring || !MPVLifecycleLock.isNativeInitialized) return
+    val id = MPVLib.getPropertyInt("aid") ?: return
+    if (runtimeAid == id) return
+    val all = readAudioTracks()
+    val track = all.firstOrNull { it.id == id }
+    if (track == null) { if (id <= 0) audioState.off(delayMs()); runtimeAid = id; return }
+    val source = if (track.sourcePath.isEmpty()) "" else localAudio.sourceIdentity(track.sourcePath) ?: return
+    val group = all.filter { it.sourcePath == track.sourcePath }
+    persistSelection(source, track.identity(group.indexOf(track)), id)
+  }
+
+  fun beginMediaChange() {
+    cancelPendingAudio()
+    mediaEpoch++
+    initializationJob?.cancel()
+    audioState.deactivate()
+    runtimeAid = null
+    replacement = null
+  }
+
+  fun restoreRememberedAudio(mediaId: String?) {
+    val epoch = mediaEpoch
+    val action = userAction
+    restoring = true
+    initializationJob = scope.launch(Dispatchers.IO) {
+      try {
+        audioState.begin(mediaId)
+        if (epoch != mediaEpoch) return@launch
+        val selection = audioState.selection()
+        val embedded = readAudioTracks().filter { it.sourcePath.isEmpty() }
+        val savedEmbedded = audioState.savedTrack("", selection?.embeddedKey)
+        val embeddedIndex = savedEmbedded?.let { AudioStreamMatcher.match(it.stream, embedded.mapIndexed { i, t -> t.identity(i) })?.index }
+        val currentEmbedded = embedded.firstOrNull { it.id == MPVLib.getPropertyInt("aid") }
+        val baseline = embeddedIndex?.let { embedded.getOrNull(it) } ?: currentEmbedded
+          ?: embedded.firstOrNull().takeIf { selection != null }
+        if (action != userAction) {
+          runtimeAid = null
+          restoring = false
+          observeAudioSelection()
+          return@launch
+        }
+        // A missing external source must leave usable original audio and its own offset.
+        val baseDelay = baseline?.let { audioState.delayFor("", it.identity(embedded.indexOf(it))) } ?: defaultAudioDelayMs()
+        if (selection != null && baseline != null) MPVLib.setPropertyInt("aid", baseline.id)
+        MPVLib.setPropertyDouble("audio-delay", baseDelay / 1000.0)
+        runtimeAid = MPVLib.getPropertyInt("aid")
+        audioState.baseline(baseline?.identity(embedded.indexOf(baseline)), baseDelay)
+        if (selection?.audioOff == true) {
+          MPVLib.setPropertyString("aid", "no")
+          runtimeAid = MPVLib.getPropertyInt("aid")
+        } else if (selection?.sourceUri == "") {
+          val saved = audioState.savedTrack("", selection.trackKey)
+          val index = saved?.let { AudioStreamMatcher.match(it.stream, embedded.mapIndexed { i, t -> t.identity(i) })?.index }
+          embedded.getOrNull(index ?: 0)?.let { track ->
+            MPVLib.setPropertyInt("aid", track.id)
+            persistSelection("", track.identity(embedded.indexOf(track)))
+          }
+        }
+        restoring = false
+        if (selection != null && selection.sourceUri.isNotEmpty() && !selection.audioOff) {
+          val preferred = audioState.savedTrack(selection.sourceUri, selection.trackKey)?.stream
+          restoreJob = scope.launch(Dispatchers.IO) {
+            restoring = true
+            try { localAudio.attach(selection.sourceUri, interactive = false, preferred = preferred, reportFailure = true).join() }
+            finally { if (epoch == mediaEpoch) restoring = false }
+          }
+        }
+      } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+      catch (e: Exception) {
+        Log.w(TAG, "Cannot restore audio preferences", e)
+        showLocalAudioToast(xyz.mpv.rex.R.string.remembered_audio_unavailable)
+      } finally { if (epoch == mediaEpoch && restoreJob?.isActive != true) restoring = false }
+    }
+  }
+
+  private fun stopAutomaticRestore() {
+    userAction++
+    if (restoreJob?.isActive == true) { restoreJob?.cancel(); localAudio.cancelPending() }
+    restoring = false
+  }
+
+  fun useRememberedAudio(source: String) {
+    stopAutomaticRestore()
+    val epoch = mediaEpoch
+    scope.launch(Dispatchers.IO) {
+      initializationJob?.join()
+      if (epoch == mediaEpoch) localAudio.attach(source, preferred = audioState.preferred(source))
+    }
+  }
+
+  fun replaceRememberedAudio(old: String, uri: Uri) {
+    replacement = old to ExternalAudioSources.identity(uri.toString())
+    addAudio(uri)
+  }
+
+  fun forgetRememberedAudio(source: String) {
+    stopAutomaticRestore()
+    val epoch = mediaEpoch
+    scope.launch(Dispatchers.IO) {
+      try {
+      initializationJob?.join()
+      if (epoch != mediaEpoch) return@launch
+      if (!MPVLifecycleLock.isNativeInitialized) { localAudio.forget(source); audioState.forget(source); return@launch }
+      if (audioState.selection()?.sourceUri == source || readAudioTracks().firstOrNull { it.id == MPVLib.getPropertyInt("aid") }?.let { localAudio.sourceIdentity(it.sourcePath) } == source) {
+        val embedded = readAudioTracks().filter { it.sourcePath.isEmpty() }
+        val preferred = audioState.savedTrack("", audioState.selection()?.embeddedKey)?.stream
+        val index = preferred?.let { AudioStreamMatcher.match(it, embedded.mapIndexed { i, t -> t.identity(i) })?.index } ?: 0
+        embedded.getOrNull(index)?.let { track ->
+          MPVLib.setPropertyInt("aid", track.id)
+          persistSelection("", track.identity(index))
+        } ?: run { MPVLib.setPropertyString("aid", "no"); audioState.off(delayMs()); runtimeAid = MPVLib.getPropertyInt("aid") }
+      }
+      localAudio.forget(source)
+      audioState.forget(source)
+      } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+      catch (e: Exception) {
+        Log.w(TAG, "Cannot forget external audio", e)
+        showLocalAudioToast(xyz.mpv.rex.R.string.external_audio_failed)
+      }
+    }
+  }
 
   private val localAudio = ExternalAudioController(
     scope = CoroutineScope(scope.coroutineContext + Dispatchers.IO),
@@ -69,21 +250,7 @@ class TrackManager(
         tracks().filter { it.sourcePath == path }.forEach { MPVLib.command("audio-remove", it.id.toString()) }
       }
 
-      override fun tracks(): List<ExternalAudioTrack> {
-        if (!MPVLifecycleLock.isNativeInitialized) return emptyList()
-        val count = MPVLib.getPropertyInt("track-list/count") ?: return emptyList()
-        return (0 until count).mapNotNull { i ->
-          if (MPVLib.getPropertyString("track-list/$i/type") != "audio" ||
-            MPVLib.getPropertyBoolean("track-list/$i/external") != true) return@mapNotNull null
-          ExternalAudioTrack(
-            id = MPVLib.getPropertyInt("track-list/$i/id") ?: return@mapNotNull null,
-            sourcePath = MPVLib.getPropertyString("track-list/$i/external-filename") ?: return@mapNotNull null,
-            title = MPVLib.getPropertyString("track-list/$i/title"),
-            language = MPVLib.getPropertyString("track-list/$i/lang"),
-            codec = MPVLib.getPropertyString("track-list/$i/codec"),
-          )
-        }
-      }
+      override fun tracks(): List<ExternalAudioTrack> = readAudioTracks().filter { it.sourcePath.isNotEmpty() }
 
       override fun select(id: Int) {
         check(MPVLifecycleLock.isNativeInitialized) { "Player is not ready" }
@@ -94,10 +261,16 @@ class TrackManager(
     onAttached = {
       _primaryVideoDuration.value?.takeIf { it > 0 }?.let { onPreciseDurationChanged?.invoke(it.toFloat()) }
     },
+    onSourceConfirmed = { uri, name, retained -> audioState.confirmed(RememberedAudioSource(uri, name, retained)) },
+    onTrackSelected = { uri, stream, aid -> persistSelection(uri, stream, aid) },
+    onSourceFailure = { uri, _ ->
+      audioState.failed(uri)
+      if (replacement?.second == uri) replacement = null
+    },
     onSelected = { showLocalAudioToast(xyz.mpv.rex.R.string.external_audio_selected) },
     onFailure = { error ->
       Log.w(TAG, "External audio attachment failed", error)
-      showLocalAudioToast(xyz.mpv.rex.R.string.external_audio_failed)
+      showLocalAudioToast(if (restoring) xyz.mpv.rex.R.string.remembered_audio_unavailable else xyz.mpv.rex.R.string.external_audio_failed)
     },
   )
   private fun showLocalAudioToast(message: Int) {
@@ -111,16 +284,21 @@ class TrackManager(
   val externalAudioChoice = localAudio.choice
   val hasExternalAudio: Boolean get() = externalAudioTracks.isNotEmpty() || localAudio.busy.value
 
-  fun chooseExternalAudio(choice: ExternalAudioChoice, id: Int) = localAudio.choose(choice, id)
-  fun dismissExternalAudioChoice() = localAudio.dismissChoice()
-  fun cancelPendingAudio() = localAudio.cancelPending()
-  fun releaseExternalAudio() = localAudio.invalidate()
+  fun chooseExternalAudio(choice: ExternalAudioChoice, id: Int): Boolean { stopAutomaticRestore(); return localAudio.choose(choice, id) }
+  fun dismissExternalAudioChoice() { replacement = null; localAudio.dismissChoice() }
+  fun cancelPendingAudio() { restoreJob?.cancel(); localAudio.cancelPending(); restoring = false }
+  fun releaseExternalAudio() { beginMediaChange(); localAudio.invalidate() }
 
   fun addAudio(uri: Uri, select: Boolean = true, silent: Boolean = false) {
     if (_primaryVideoDuration.value == null || (_primaryVideoDuration.value ?: 0.0) <= 0) {
       _primaryVideoDuration.value = MPVLib.getPropertyDouble("duration")?.takeIf { it > 0 }
     }
-    localAudio.attach(uri.toString(), select = select, interactive = !silent)
+    if (!silent) stopAutomaticRestore()
+    val epoch = mediaEpoch
+    scope.launch(Dispatchers.IO) {
+      initializationJob?.join()
+      if (epoch == mediaEpoch) localAudio.attach(uri.toString(), select = select, interactive = !silent)
+    }
   }
 
   /**
@@ -256,6 +434,7 @@ class TrackManager(
   }
 
   fun resetExternalAudioTracks() {
+    beginMediaChange()
     localAudio.invalidate()
     synchronized(_externalAudioTracks) {
       _externalAudioTracks.clear()
@@ -319,13 +498,18 @@ class TrackManager(
   }
 
   fun selectAudioTrack(id: Int, title: String?, lang: String?) {
+    stopAutomaticRestore()
+    captureAudioDelay()
     val currentAid = MPVLib.getPropertyInt("aid") ?: 0
     if (currentAid == id) {
       MPVLib.setPropertyString("aid", "no")
       TrackSelector.rememberAudioTrack(null, null)
+      audioState.off(delayMs())
+      runtimeAid = MPVLib.getPropertyInt("aid")
     } else {
       MPVLib.setPropertyInt("aid", id)
       TrackSelector.rememberAudioTrack(title, lang)
+      observeAudioSelection()
       playbackManager.resyncAudioOnTrackChange(scope)
     }
   }

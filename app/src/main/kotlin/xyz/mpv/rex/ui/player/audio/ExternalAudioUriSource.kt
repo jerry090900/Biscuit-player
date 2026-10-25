@@ -18,11 +18,14 @@ internal fun openExternalAudioSource(context: Context, identity: String): Extern
     runCatching {
       context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
     } // Some providers grant only temporary read access; opening below is the authority.
+    val retained = runCatching { context.contentResolver.persistedUriPermissions.any { it.uri == uri && it.isReadPermission } }.getOrDefault(false)
     val descriptor = context.contentResolver.openFileDescriptor(uri, "r")
       ?: error("Cannot read this audio source")
     return object : ExternalAudioSource {
       // Keep ownership instead of detachFd(): failed/stale requests must not leak descriptors.
       override val path = "fd://${descriptor.fd}"
+      override val displayName = name
+      override val persistableRead = retained
       override fun close() = descriptor.close()
     }
   }
@@ -34,6 +37,8 @@ internal fun openExternalAudioSource(context: Context, identity: String): Extern
   } else identity
   return object : ExternalAudioSource {
     override val path = path
+    override val displayName = uri.lastPathSegment ?: "External audio"
+    override val persistableRead = uri.scheme == "file"
     override fun close() = Unit
   }
 }

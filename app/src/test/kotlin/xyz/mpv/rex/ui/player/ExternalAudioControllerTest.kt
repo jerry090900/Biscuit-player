@@ -30,6 +30,7 @@ class ExternalAudioControllerTest {
     var opens = 0
     var streamCount = 1
     var readError = false
+    var openFailure: Exception? = null
     var selectionError = false
     var opening: CompletableDeferred<Unit>? = null
     var ignoreOpenCancellation = false
@@ -40,6 +41,7 @@ class ExternalAudioControllerTest {
     override fun primaryPath() = primary
     override suspend fun open(identity: String): ExternalAudioSource {
       opens++
+      openFailure?.let { throw it }
       if (readError) throw IOException("Provider denied read access")
       opening?.let { gate ->
         if (ignoreOpenCancellation) withContext(NonCancellable) { gate.await() } else gate.await()
@@ -329,5 +331,50 @@ class ExternalAudioControllerTest {
     assertEquals(2, f.successes)
     assertFalse(f.port.resources.last().closed)
     assertTrue(f.failures.isEmpty())
+  }
+
+  @Test fun `restore preferred stream selects Hindi even when English is first`() = runTest {
+    val f = Fixture(this)
+    f.port.streamCount = 2
+    val saved = xyz.mpv.rex.domain.audio.AudioStreamIdentity(ordinal = 1, language = "hi", title = "Track 1", codec = "aac")
+    f.controller.attach("file:///Hindi.mkv", interactive = false, preferred = saved, reportFailure = true)
+    settle()
+    assertEquals(listOf(11), f.port.selected)
+    assertNull(f.controller.choice.value)
+    assertTrue(f.failures.isEmpty())
+  }
+
+  @Test fun `restore refuses clearly different language without replacing original audio`() = runTest {
+    val f = Fixture(this)
+    f.port.streamCount = 2
+    f.port.selected += 1
+    val saved = xyz.mpv.rex.domain.audio.AudioStreamIdentity(language = "ja")
+    f.controller.attach("file:///changed.mkv", interactive = false, preferred = saved, reportFailure = true)
+    settle()
+    assertEquals(listOf(1), f.port.selected)
+    assertEquals(1, f.failures.size)
+    assertEquals(1, f.controller.identities.value.size)
+  }
+
+  @Test fun `revoked URI grant fails restoration without blocking original playback`() = runTest {
+    val f = Fixture(this)
+    f.port.openFailure = SecurityException("Read permission revoked")
+    f.port.selected += 1
+    f.controller.attach("content://provider/document/42", interactive = false, reportFailure = true)
+    settle()
+    assertEquals(listOf(1), f.port.selected)
+    assertEquals(0, f.port.additions)
+    assertEquals(1, f.failures.size)
+    assertTrue(f.controller.identities.value.isEmpty())
+  }
+
+  @Test fun `saved stream fingerprint restores despite unrelated runtime numeric IDs`() = runTest {
+    val f = Fixture(this)
+    f.port.available += ExternalAudioTrack(88, "unrelated")
+    f.port.streamCount = 2
+    val saved = xyz.mpv.rex.domain.audio.AudioStreamIdentity(ordinal = 1, language = "hi", title = "Track 1", codec = "aac")
+    f.controller.attach("file:///Hindi.mkv", interactive = false, preferred = saved)
+    settle()
+    assertEquals(listOf(12), f.port.selected)
   }
 }

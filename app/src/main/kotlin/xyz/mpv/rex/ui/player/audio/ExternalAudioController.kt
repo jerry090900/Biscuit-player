@@ -1,5 +1,7 @@
 package xyz.mpv.rex.ui.player.audio
 
+import xyz.mpv.rex.domain.audio.AudioStreamIdentity
+import xyz.mpv.rex.domain.audio.AudioStreamMatcher
 import java.io.Closeable
 import java.io.File
 import java.net.URI
@@ -42,6 +44,8 @@ object ExternalAudioSources {
 /** One open, read-only source. The owner keeps it alive until this playback session ends. */
 interface ExternalAudioSource : Closeable {
   val path: String
+  val displayName: String get() = "External audio"
+  val persistableRead: Boolean get() = false
 }
 
 data class ExternalAudioTrack(
@@ -50,7 +54,13 @@ data class ExternalAudioTrack(
   val title: String? = null,
   val language: String? = null,
   val codec: String? = null,
-)
+  val streamIndex: Long? = null,
+  val sourceId: Long? = null,
+  val channels: String? = null,
+  val sampleRate: Long? = null,
+) {
+  fun identity(ordinal: Int) = AudioStreamIdentity(streamIndex, sourceId, ordinal, language, title, codec, channels, sampleRate)
+}
 
 data class ExternalAudioChoice(
   val generation: Long,
@@ -76,6 +86,9 @@ class ExternalAudioController(
   private val onAttached: () -> Unit = {},
   private val onSelected: () -> Unit = {},
   private val onFailure: (Throwable) -> Unit = {},
+  private val onSourceConfirmed: (String, String, Boolean) -> Unit = { _, _, _ -> },
+  private val onTrackSelected: (String, AudioStreamIdentity, Int) -> Unit = { _, _, _ -> },
+  private val onSourceFailure: (String, Throwable) -> Unit = { _, _ -> },
 ) {
   private val gate = Any()
   private val mutex = Mutex()
@@ -91,7 +104,7 @@ class ExternalAudioController(
   private val _choice = MutableStateFlow<ExternalAudioChoice?>(null)
   val choice = _choice.asStateFlow()
 
-  fun attach(value: String, select: Boolean = true, interactive: Boolean = true): Job = synchronized(gate) {
+  fun attach(value: String, select: Boolean = true, interactive: Boolean = true, preferred: AudioStreamIdentity? = null, reportFailure: Boolean = interactive): Job = synchronized(gate) {
     val epoch = generation
     val primary = port.primaryPath()
     pendingCount++
@@ -141,11 +154,15 @@ class ExternalAudioController(
           }
           synchronized(gate) {
             checkCurrent(epoch, primary)
+            sources[identity]?.let { onSourceConfirmed(identity, it.displayName, it.persistableRead) }
             if (select) {
-              if (tracks.size > 1 && interactive) {
+              if (tracks.size > 1 && interactive && preferred == null) {
                 _choice.value = ExternalAudioChoice(epoch, identity, primary, tracks)
               } else {
-                port.select(tracks.first().id)
+                val index = if (preferred == null) 0 else AudioStreamMatcher.match(preferred, tracks.mapIndexed { i, t -> t.identity(i) })?.index
+                  ?: error("The remembered audio language is unavailable")
+                port.select(tracks[index].id)
+                onTrackSelected(identity, tracks[index].identity(index), tracks[index].id)
                 if (interactive) onSelected()
               }
             }
@@ -155,7 +172,10 @@ class ExternalAudioController(
         throw e
       } catch (e: Exception) {
         synchronized(gate) {
-          if (generation == epoch && port.primaryPath() == primary && interactive) onFailure(e)
+          if (generation == epoch && port.primaryPath() == primary) {
+            runCatching { onSourceFailure(ExternalAudioSources.identity(value), e) }
+            if (reportFailure) onFailure(e)
+          }
         }
       } finally {
         opened?.let { resource ->
@@ -181,6 +201,8 @@ class ExternalAudioController(
     try {
       if (choice.tracks.none { it.id == id } || port.tracks().none { it.id == id && it.sourcePath == source.path }) return false
       port.select(id)
+      val index = choice.tracks.indexOfFirst { it.id == id }
+      onTrackSelected(choice.identity, choice.tracks[index].identity(index), id)
       _choice.value = null
       onSelected()
       true
@@ -188,6 +210,19 @@ class ExternalAudioController(
       onFailure(e)
       false
     }
+  }
+
+  fun sourceIdentity(path: String): String? = synchronized(gate) {
+    sources.entries.firstOrNull { it.value.path == path }?.key
+  }
+
+  fun forget(identity: String) = synchronized(gate) {
+    cancelPending()
+    sources.remove(identity)?.let { source ->
+      runCatching { port.discard(source.path) }
+      runCatching { source.close() }
+    }
+    _identities.value = sources.keys.toList()
   }
 
   fun dismissChoice() { _choice.value = null }

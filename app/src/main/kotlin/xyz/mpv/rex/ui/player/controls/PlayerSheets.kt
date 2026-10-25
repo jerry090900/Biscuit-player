@@ -259,12 +259,21 @@ fun PlayerSheets(
 
     Sheets.AudioTracks -> {
       var pickerSession by remember { mutableStateOf<Long?>(null) }
+      var replacingSource by remember { mutableStateOf<String?>(null) }
+      val rememberedSources by viewModel.trackManager.rememberedAudioSources.composeCollectAsState()
+      val acceptAudio: (Uri) -> Unit = { uri ->
+        if (pickerSession == viewModel.trackManager.externalAudioSessionId) {
+          val old = replacingSource
+          if (old == null) onAddAudio(uri) else viewModel.trackManager.replaceRememberedAudio(old, uri)
+        }
+        replacingSource = null
+      }
       val audioPicker =
         rememberLauncherForActivityResult(
           ActivityResultContracts.OpenDocument(),
         ) {
           if (it == null) return@rememberLauncherForActivityResult
-          if (pickerSession == viewModel.trackManager.externalAudioSessionId) onAddAudio(it)
+          acceptAudio(it)
         }
 
       val audioPreferences = koinInject<xyz.mpv.rex.preferences.AudioPreferences>()
@@ -301,9 +310,7 @@ fun PlayerSheets(
               },
               onFileSelected = { path ->
                   showFilePicker = false
-                  if (pickerSession == viewModel.trackManager.externalAudioSessionId) {
-                    onAddAudio(Uri.fromFile(java.io.File(path)))
-                  }
+                  acceptAudio(Uri.fromFile(java.io.File(path)))
               },
               onSystemPickerRequest = {
                   showFilePicker = false
@@ -318,6 +325,7 @@ fun PlayerSheets(
         tracks = audioTracks,
         onSelect = onSelectAudio,
         onAddAudioTrack = {
+          replacingSource = null
           pickerSession = viewModel.trackManager.externalAudioSessionId
           showFilePicker = true
         },
@@ -325,6 +333,14 @@ fun PlayerSheets(
         onDismissRequest,
         alternateTracks = alternateAudio,
         onSelectAlternate = onSelectAlternateAudio,
+        rememberedSources = rememberedSources,
+        onUseRemembered = viewModel.trackManager::useRememberedAudio,
+        onForgetRemembered = viewModel.trackManager::forgetRememberedAudio,
+        onReplaceRemembered = { source ->
+          replacingSource = source
+          pickerSession = viewModel.trackManager.externalAudioSessionId
+          showFilePicker = true
+        },
       )
     }
 

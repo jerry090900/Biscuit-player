@@ -101,6 +101,7 @@ class PlayerViewModel(
   private val decoderPreferences: DecoderPreferences by inject()
   private val gesturePreferences: GesturePreferences by inject()
   private val audioPreferences: AudioPreferences by inject()
+  private val audioAssociationStore: xyz.mpv.rex.domain.audio.AudioAssociationStore by inject()
   private val subtitlesPreferences: SubtitlesPreferences by inject()
   private val advancedPreferences: AdvancedPreferences by inject()
   private val json: Json by inject()
@@ -171,9 +172,21 @@ class PlayerViewModel(
     scope = viewModelScope,
     onShowToast = { showToast(it) },
     context = host.context,
+    audioStore = audioAssociationStore,
+    defaultAudioDelayMs = { audioPreferences.defaultAudioDelay.get().toLong() },
     onPreciseDurationChanged = { _preciseDuration.value = it }
   )
   val trackManager: TrackManager get() = _trackManager
+
+  init {
+    viewModelScope.launch {
+      MPVLib.propDouble["audio-delay"].collect { runCatching { _trackManager.captureAudioDelay() } }
+    }
+    viewModelScope.launch {
+      MPVLib.propInt["aid"].collect { runCatching { _trackManager.observeAudioSelection() } }
+    }
+  }
+
 
   /**
    * Manager for snapshots and screenshots.
@@ -774,7 +787,7 @@ class PlayerViewModel(
   }
 
   fun onFileStartLoading(isNetwork: Boolean = false) {
-    _trackManager.cancelPendingAudio()
+    _trackManager.beginMediaChange()
     _isLoadingFile.value = true
     _isLoadingUrl.value = isNetwork
     _isNetworkStream.value = isNetwork
@@ -796,7 +809,7 @@ class PlayerViewModel(
   }
 
   fun onQualitySwitchLoading() {
-    _trackManager.cancelPendingAudio()
+    _trackManager.beginMediaChange()
     _isLoadingFile.value = true
     _isLoadingUrl.value = true
     _isNetworkStream.value = true
