@@ -359,10 +359,12 @@ object MainScreen : Screen {
       }
     }
 
-    val cinematicSelected = visibleTabs.getOrNull(selectedTab)?.id == "cinema"
+    // Keep the first frame dark while the initial Home tab is resolved.
+    val cinematicSelected = selectedTab < 0 || visibleTabs.getOrNull(selectedTab)?.id == "cinema"
     // Scaffold with bottom navigation bar
     Scaffold(
       modifier = Modifier.fillMaxSize(),
+      containerColor = if (cinematicSelected) xyz.mpv.rex.ui.browser.home.BiscuitCinema.background else MaterialTheme.colorScheme.background,
       bottomBar = {
         // Animated bottom navigation bar with slide animations
         // Also hide if Shorts tab is active (index 1 when enabled, index -1 when disabled)
