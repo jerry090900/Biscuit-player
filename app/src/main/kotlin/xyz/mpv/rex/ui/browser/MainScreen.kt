@@ -81,9 +81,12 @@ import org.koin.compose.koinInject
 @Serializable
 object MainScreen : Screen {
   // Use a companion object to store state more persistently
-  private var persistentSelectedTab: Int = 0
+  private var persistentSelectedTab: Int = -1
   private var persistentPreviousTab: Int = 0
   
+  private val areaRequest = MutableSharedFlow<String>(extraBufferCapacity = 1)
+  fun requestArea(id: String) { areaRequest.tryEmit(id) }
+
   private val _tabRequest = MutableSharedFlow<Int>(extraBufferCapacity = 1)
   val tabRequest = _tabRequest.asSharedFlow()
 
@@ -210,7 +213,7 @@ object MainScreen : Screen {
     ) {
       val rawTabs = buildList {
         add(
-          VisibleTab("home", homeLabel, Icons.Filled.Home) {
+          VisibleTab("home", "Library", Icons.Outlined.VideoLibrary) {
             FolderListScreen.Content()
           }
         )
@@ -257,13 +260,13 @@ object MainScreen : Screen {
       rawTabs.sortedBy { tab ->
         val idx = orderList.indexOf(tab.id)
         if (idx == -1) Int.MAX_VALUE else idx
-      }
+      } + VisibleTab("cinema", "Home", Icons.Filled.Home) { xyz.mpv.rex.ui.browser.home.CinematicHome() }
     }
 
     // Ensure selectedTab is always clamped within active tabs range
     LaunchedEffect(visibleTabs) {
-      if (selectedTab >= visibleTabs.size) {
-        selectedTab = 0
+      if (selectedTab < 0 || selectedTab >= visibleTabs.size) {
+        selectedTab = visibleTabs.indexOfFirst { it.id == "cinema" }
       }
     }
 
@@ -295,10 +298,14 @@ object MainScreen : Screen {
       persistentSelectedTab = selectedTab
     }
 
+    LaunchedEffect(visibleTabs) {
+      areaRequest.collect { id -> visibleTabs.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { selectedTab = it } }
+    }
+
     // Handle tab requests from other screens
     LaunchedEffect(Unit) {
       tabRequest.collect { tab ->
-        selectedTab = tab
+        selectedTab = tab.takeIf { it in visibleTabs.indices } ?: visibleTabs.indexOfFirst { it.id == "cinema" }
       }
     }
 
@@ -352,6 +359,7 @@ object MainScreen : Screen {
       }
     }
 
+    val cinematicSelected = visibleTabs.getOrNull(selectedTab)?.id == "cinema"
     // Scaffold with bottom navigation bar
     Scaffold(
       modifier = Modifier.fillMaxSize(),
@@ -373,10 +381,16 @@ object MainScreen : Screen {
             )
           ) {
             NavigationBar(
-              containerColor = if (isShortsTabActive) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
+              containerColor = if (cinematicSelected) xyz.mpv.rex.ui.browser.home.BiscuitCinema.background else if (isShortsTabActive) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer,
               contentColor = if (isShortsTabActive) Color.White else MaterialTheme.colorScheme.onSurface,
             ) {
-              val itemColors = if (isShortsTabActive) {
+              val itemColors = if (cinematicSelected) {
+                NavigationBarItemDefaults.colors(selectedIconColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.accent,
+                  selectedTextColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.ink,
+                  unselectedIconColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.muted,
+                  unselectedTextColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.muted,
+                  indicatorColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.surface)
+              } else if (isShortsTabActive) {
                 NavigationBarItemDefaults.colors(
                   selectedIconColor = Color.White,
                   selectedTextColor = Color.White,
@@ -394,7 +408,7 @@ object MainScreen : Screen {
                 )
               }
 
-              visibleTabs.forEachIndexed { index, tab ->
+              visibleTabs.withIndex().sortedBy { if (it.value.id == "cinema") -1 else it.index }.forEach { (index, tab) ->
                 val isYouTabWithCustomAvatar = tab.id == "you" && customAvatarBitmap != null
                 NavigationBarItem(
                   icon = {
@@ -508,7 +522,7 @@ object MainScreen : Screen {
             if (targetTab in visibleTabs.indices) {
               visibleTabs[targetTab].content()
             } else {
-              FolderListScreen.Content()
+              xyz.mpv.rex.ui.browser.home.CinematicHome()
             }
           }
         }
