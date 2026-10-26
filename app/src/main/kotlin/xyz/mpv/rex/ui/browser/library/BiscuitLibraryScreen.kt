@@ -1,6 +1,7 @@
 package xyz.mpv.rex.ui.browser.library
 
 import android.app.Application
+import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,7 +53,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -326,6 +327,8 @@ private fun FolderPreview(folder: VideoFolder) {
         MediaFileRepository.getVideosForBuckets(context, setOf(folder.bucketId)).firstOrNull { !it.isAudio }
       }
       firstVideo?.let { thumbnails.getThumbnail(it, 320, 180) }
+    } catch (e: CancellationException) {
+      throw e
     } catch (_: Exception) {
       null
     }
