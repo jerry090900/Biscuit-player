@@ -6,6 +6,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Checkroom
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,45 +69,25 @@ fun CinematicHome() {
   val backstack = LocalBackStack.current
   var info by remember { mutableStateOf<Video?>(null) }
   val bottom = LocalNavigationBarHeight.current
-  val folders = remember(state.videos) { state.videos.values.groupBy { it.bucketId }.values.take(20) }
   val play: (HomeMedia) -> Unit = { item -> state.videos[item.key]?.let { MediaUtils.playFile(it, context, "media_library_list") } }
-  MaterialTheme(colorScheme = darkColorScheme(primary = BiscuitCinema.accent, onPrimary = BiscuitCinema.background,
+  MaterialTheme(colorScheme = darkColorScheme(primary = BiscuitCinema.accent, onPrimary = BiscuitCinema.ink,
     background = BiscuitCinema.background, surface = BiscuitCinema.surface, onSurface = BiscuitCinema.ink)) {
     LazyColumn(Modifier.fillMaxSize().background(BiscuitCinema.background).statusBarsPadding(), state = listState,
       contentPadding = PaddingValues(bottom = bottom + 24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
       item(key = "brand") {
         Column(Modifier.padding(horizontal = BiscuitCinema.spacing)) {
           Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("BISCUIT", Modifier.weight(1f), color = BiscuitCinema.accent, letterSpacing = 5.sp, fontWeight = FontWeight.Black, fontSize = 26.sp)
-            TextButton(onClick = { backstack.add(PreferencesScreen) }) { Text("Settings") }
-          }
-          Text("YOUR FILES. YOUR CINEMA.", color = BiscuitCinema.muted, letterSpacing = 2.sp, fontSize = 11.sp)
-          Row {
-            TextButton(onClick = { MainScreen.requestArea("home") }) { Text("Library / Folders") }
-            TextButton(onClick = { backstack.add(xyz.mpv.rex.ui.browser.networkstreaming.NetworkStreamingScreen) }) { Text("Network") }
-            TextButton(onClick = model::refresh) { Text("Refresh") }
-          }
-        }
-      }
-      state.catalog.hero?.let { hero -> item(key = "hero") {
-        BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(BiscuitCinema.cardShape)) {
-          val height = if (maxWidth > 700.dp) 360.dp else 440.dp
-          Box(Modifier.fillMaxWidth().height(height).background(BiscuitCinema.surface)) {
-            HomeThumbnail(state.videos[hero.key], Modifier.fillMaxSize(), true)
-            Box(Modifier.fillMaxSize().background(Brush.verticalGradient(BiscuitCinema.scrim)))
-            Column(Modifier.align(Alignment.BottomStart).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-              Text(if (hero.resumable) "PICK UP WHERE YOU LEFT OFF" else "FROM YOUR LIBRARY", color = BiscuitCinema.accent, fontSize = 11.sp, letterSpacing = 2.sp)
-              Text(hero.title.substringBeforeLast('.'), color = BiscuitCinema.ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
-              Text("${hero.folder}  ·  ${hero.durationMs / 60000} min", color = BiscuitCinema.muted)
-              if (hero.progress > 0) LinearProgressIndicator(progress = { hero.progress }, modifier = Modifier.fillMaxWidth(), color = BiscuitCinema.accent)
-              Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(onClick = { play(hero) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (hero.resumable) "Continue" else "Play") }
-                OutlinedButton(onClick = { info = state.videos[hero.key] }, modifier = Modifier.heightIn(min = 48.dp)) { Text("More Info") }
-              }
+            Text("BISCUIT", Modifier.weight(1f), color = BiscuitCinema.accentInk, letterSpacing = 5.sp, fontWeight = FontWeight.Black, fontSize = 26.sp)
+            IconButton(onClick = { backstack.add(xyz.mpv.rex.ui.preferences.AppearancePreferencesScreen) }) {
+              Icon(Icons.Outlined.Checkroom, contentDescription = "Appearance", tint = BiscuitCinema.ink)
             }
           }
         }
-      } }
+      }
+      if (state.catalog.heroItems.isNotEmpty()) item(key = "hero") {
+        val visible by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.any { it.key == "hero" } } }
+        BiscuitHeroCarousel(state.catalog.heroItems, state.videos, visible = visible, onPlay = play, onInfo = { info = it })
+      }
       if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = BiscuitCinema.spacing)) }
       if (!state.loading && state.catalog.hero == null) item {
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -123,16 +105,7 @@ fun CinematicHome() {
           }
         }
       } }
-      if (folders.isNotEmpty()) item(key = "folders") {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-          Text("Folders / Collections", Modifier.padding(horizontal = BiscuitCinema.spacing), color = BiscuitCinema.ink, fontSize = 22.sp)
-          LazyRow(contentPadding = PaddingValues(horizontal = BiscuitCinema.spacing), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            items(folders, key = { it.first().bucketId }) { group ->
-              BiscuitFolderCard(group.first().bucketDisplayName, group.size) { backstack.add(VideoListScreen(group.first().bucketId, group.first().bucketDisplayName)) }
-            }
-          }
-        }
-      }
+
     }
     info?.let { video -> MediaInfoSheet(video.uri) { info = null } }
   }
@@ -155,13 +128,13 @@ fun BiscuitMediaCard(item: HomeMedia, video: Video?, poster: Boolean, onClick: (
 @Composable
 fun BiscuitFolderCard(title: String, count: Int, onClick: () -> Unit) {
   Column(Modifier.width(210.dp).clip(BiscuitCinema.cardShape).background(BiscuitCinema.surface).clickable(onClick = onClick).padding(BiscuitCinema.spacing).heightIn(min = 64.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-    Text(title, color = BiscuitCinema.accent, maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+    Text(title, color = BiscuitCinema.accentInk, maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
     Text("$count videos", color = BiscuitCinema.muted)
   }
 }
 
 @Composable
-private fun HomeThumbnail(video: Video?, modifier: Modifier, hero: Boolean = false) {
+internal fun HomeThumbnail(video: Video?, modifier: Modifier, hero: Boolean = false) {
   val repository = koinInject<ThumbnailRepository>()
   val bitmap by produceState<Bitmap?>(null, video?.path, video?.dateModified, hero) {
     value = null

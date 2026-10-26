@@ -9,9 +9,11 @@ class HomeCatalogTest {
   @Test fun `empty catalog has no fabricated sections`() {
     val state=HomeCatalogBuilder.build(emptyList());assertNull(state.hero);assertTrue(state.rows.isEmpty())
   }
-  @Test fun `unfinished media outranks newly added hero`() {
+  @Test fun `recently added owns hero while unfinished media remains in continue watching`() {
     val active=media("active",recent=20,position=30)
-    assertEquals(active,HomeCatalogBuilder.build(listOf(media("new",added=100),active)).hero)
+    val state = HomeCatalogBuilder.build(listOf(media("new",added=100),active))
+    assertEquals("new", state.hero?.key)
+    assertEquals(active, state.rows.first { it.title == "Continue Watching" }.items.single())
   }
   @Test fun `watched tiny and almost finished progress excluded`() {
     val state=HomeCatalogBuilder.build(listOf(media("tiny",position=1),media("done",position=98),media("watched",position=40,watched=true)))
@@ -19,7 +21,7 @@ class HomeCatalogTest {
   }
   @Test fun `recent fallback and unique bounded rows`() {
     val a=media("recent",added=0,recent=100)
-    assertEquals(a,HomeCatalogBuilder.build(listOf(a,media("other",added=0))).hero)
+    assertEquals(listOf("other", "recent"), HomeCatalogBuilder.build(listOf(a,media("other",added=0))).heroItems.map { it.key })
     assertTrue(HomeCatalogBuilder.build((1..100).map{media("$it")}).rows.all{it.items.size<=30})
     assertEquals(1,HomeCatalogBuilder.build(listOf(a,a)).rows.first().items.size)
   }

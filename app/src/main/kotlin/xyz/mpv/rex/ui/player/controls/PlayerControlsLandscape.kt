@@ -193,33 +193,7 @@ fun BottomRightPlayerControlsLandscape(
   viewModel: PlayerViewModel,
   activity: PlayerActivity,
 ) {
-  if (buttons.isNotEmpty()) {
-    ControlsGroup(
-      shape = RoundedCornerShape(16.dp),
-    ) {
-      buttons.forEach { button ->
-        RenderPlayerButton(
-          button = button,
-          chapters = chapters,
-          currentChapter = currentChapter,
-          isPortrait = false,
-          isSpeedNonOne = isSpeedNonOne,
-          currentZoom = currentZoom,
-          aspect = aspect,
-          mediaTitle = mediaTitle,
-          hideBackground = hideBackground,
-          decoder = decoder,
-          playbackSpeed = playbackSpeed,
-          onBackPress = onBackPress,
-          onOpenSheet = onOpenSheet,
-          onOpenPanel = onOpenPanel,
-          viewModel = viewModel,
-          activity = activity,
-          buttonSize = 38.dp,
-        )
-      }
-    }
-  }
+  BiscuitPrimaryControls(viewModel, onOpenSheet, onOpenPanel)
 }
 
 @Composable

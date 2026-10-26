@@ -143,27 +143,17 @@ class SearchablePreferenceTest {
     }
 
     @Test
-    fun `searching Biscuit Shorts finds shorts preferences`() {
+    fun `shorts implementation is hidden from normal settings search`() {
         val results = SearchablePreferences.search("Shorts", stringResolver)
-        assertFalse(results.isEmpty())
-
-        val foundEnableShorts = results.any { it.titleRes == R.string.pref_enable_rexshorts }
-        val foundAutoSwipe = results.any { it.titleRes == R.string.pref_auto_swipe_shorts }
-        val foundShortsCategory = results.any { it.titleRes == R.string.pref_category_rexshorts_settings }
-
-        assertTrue("Expected pref_enable_rexshorts in results", foundEnableShorts)
-        assertTrue("Expected pref_auto_swipe_shorts in results", foundAutoSwipe)
-        assertTrue("Expected Biscuit Shorts category in results", foundShortsCategory)
+        assertTrue(results.none { it.screen == ShortsPreferencesScreen })
+        assertTrue(results.none { it.titleRes == R.string.pref_enable_rexshorts })
     }
 
     @Test
-    fun `searching Auto swipe finds auto swipe shorts preference`() {
+    fun `legacy shorts controls cannot be reached through search`() {
         val results = SearchablePreferences.search("Auto swipe", stringResolver)
-        assertFalse(results.isEmpty())
-
-        val first = results.first()
-        assertEquals(R.string.pref_auto_swipe_shorts, first.titleRes)
-        assertEquals(ShortsPreferencesScreen, first.screen)
+        assertTrue(results.none { it.screen == ShortsPreferencesScreen })
+        assertTrue(results.none { it.titleRes == R.string.pref_auto_swipe_shorts })
     }
 
     @Test
@@ -338,11 +328,7 @@ class SearchablePreferenceTest {
         )
 
         val rexShortsResults = SearchablePreferences.search("biscuit-shorts", stringResolver)
-        assertFalse("Expected results for biscuit-shorts", rexShortsResults.isEmpty())
-        assertTrue(
-            "Expected Biscuit Shorts in results",
-            rexShortsResults.any { it.titleRes == R.string.pref_category_rexshorts_settings }
-        )
+        assertTrue("Shorts must not appear in normal Biscuit search", rexShortsResults.none { it.screen == ShortsPreferencesScreen })
     }
 
     @Test

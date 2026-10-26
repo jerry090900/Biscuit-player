@@ -368,7 +368,7 @@ private fun SquigglySeekbar(
   val whiteSeekBar by playerPreferences.whiteSeekBar.collectAsState()
   val showSeekbarChapters by playerPreferences.showSeekbarChapters.collectAsState()
   val showSeekbarReadAhead by playerPreferences.showSeekbarReadAhead.collectAsState()
-  val primaryColor = if (whiteSeekBar) Color.White else MaterialTheme.colorScheme.primary
+  val primaryColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.accent
   val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
   val gesturePreferences = koinInject<GesturePreferences>()
@@ -792,7 +792,7 @@ fun StandardSeekbar(
     val whiteSeekBar by playerPreferences.whiteSeekBar.collectAsState()
     val showSeekbarChapters by playerPreferences.showSeekbarChapters.collectAsState()
     val showSeekbarReadAhead by playerPreferences.showSeekbarReadAhead.collectAsState()
-    val primaryColor = if (whiteSeekBar) Color.White else MaterialTheme.colorScheme.primary
+    val primaryColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.accent
     val interactionSource = remember { MutableInteractionSource() }
     
     val isThick = seekbarStyle == SeekbarStyle.Thick

@@ -54,6 +54,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.CameraAlt
@@ -313,35 +315,10 @@ fun PlayerControls(
   val bottomLeftControlsPref by appearancePreferences.bottomLeftControls.collectAsState()
   val portraitBottomControlsPref by appearancePreferences.portraitBottomControls.collectAsState()
 
-  val (topRightButtons, bottomRightButtons, bottomLeftButtons) =
-    remember(
-      topRightControlsPref,
-      bottomRightControlsPref,
-      bottomLeftControlsPref,
-    ) {
-      val usedButtons = mutableSetOf<xyz.mpv.rex.preferences.PlayerButton>()
-      val topR = appearancePreferences.parseButtons(topRightControlsPref, usedButtons)
-      val bottomR = appearancePreferences.parseButtons(bottomRightControlsPref, usedButtons)
-      val bottomL = appearancePreferences.parseButtons(bottomLeftControlsPref, usedButtons)
-      listOf(topR, bottomR, bottomL)
-    }
-
-  val portraitBottomButtonsRaw = remember(portraitBottomControlsPref) {
-    appearancePreferences.parseButtons(portraitBottomControlsPref, mutableSetOf())
-  }
-
-  val portraitVisibleButtons = remember(portraitBottomButtonsRaw, chapters, playlist, viewModel) {
-    portraitBottomButtonsRaw.filter { button ->
-      when (button) {
-        xyz.mpv.rex.preferences.PlayerButton.BOOKMARKS_CHAPTERS -> chapters.isNotEmpty()
-        xyz.mpv.rex.preferences.PlayerButton.SHUFFLE -> viewModel.hasPlaylistSupport()
-        xyz.mpv.rex.preferences.PlayerButton.CURRENT_CHAPTER -> false
-        xyz.mpv.rex.preferences.PlayerButton.MORE_OPTIONS -> false
-        xyz.mpv.rex.preferences.PlayerButton.NONE -> false
-        else -> true
-      }
-    }
-  }
+  val topRightButtons = emptyList<xyz.mpv.rex.preferences.PlayerButton>()
+  val bottomRightButtons = emptyList<xyz.mpv.rex.preferences.PlayerButton>()
+  val bottomLeftButtons = emptyList<xyz.mpv.rex.preferences.PlayerButton>()
+  val portraitVisibleButtons = emptyList<xyz.mpv.rex.preferences.PlayerButton>()
 
   var isUnlockSliderDragging by remember { mutableStateOf(false) }
 
@@ -1118,11 +1095,11 @@ fun PlayerControls(
               )
 
               val hasPlaylist = playlistItems.isNotEmpty() && playlistIndex >= 0 && viewModel.hasPlaylistSupport()
-              val showPrevNext = showNextPreviousButtons && (hasPlaylist || isPlaybackControlsAtBottom)
+              val showPrevNext = true
 
               if (showPrevNext) {
-                val canGoPrevious = if (hasPlaylist) viewModel.hasPrevious() else false
-                val canGoNext = if (hasPlaylist) viewModel.hasNext() else false
+                val canGoPrevious = true
+                val canGoNext = true
                 if (!hideBackground) {
                   val centerDockShape = if (isPlaybackControlsAtBottom) RoundedCornerShape(16.dp) else RoundedCornerShape(22.dp)
                   val centerGlassModifier = if (enableGlass) {
@@ -1166,7 +1143,7 @@ fun PlayerControls(
                     ) {
                       Box(
                         modifier = Modifier
-                          .size(if (isPlaybackControlsAtBottom) 36.dp else 44.dp)
+                          .size(48.dp)
                           .clip(RoundedCornerShape(if (isPlaybackControlsAtBottom) 12.dp else 14.dp))
                           .clickable(
                             enabled = canGoPrevious,
@@ -1174,14 +1151,14 @@ fun PlayerControls(
                             indication = ripple(bounded = true),
                             onClick = {
                               resetControlsTimestamp = System.currentTimeMillis()
-                              viewModel.handleMediaPrevious()
+                              viewModel.seekBy(-10)
                             },
                           ),
                         contentAlignment = Alignment.Center,
                       ) {
                         Icon(
-                          imageVector = Icons.Default.SkipPrevious,
-                          contentDescription = "Previous",
+                          imageVector = Icons.Default.Replay10,
+                          contentDescription = "Rewind 10 seconds",
                           tint = if (canGoPrevious) contentColor.copy(alpha = 0.85f) else contentColor.copy(alpha = 0.35f),
                           modifier = Modifier.size(if (isPlaybackControlsAtBottom) 22.dp else 28.dp),
                         )
@@ -1218,7 +1195,7 @@ fun PlayerControls(
 
                       Box(
                         modifier = Modifier
-                          .size(if (isPlaybackControlsAtBottom) 36.dp else 44.dp)
+                          .size(48.dp)
                           .clip(RoundedCornerShape(if (isPlaybackControlsAtBottom) 12.dp else 14.dp))
                           .clickable(
                             enabled = canGoNext,
@@ -1226,14 +1203,14 @@ fun PlayerControls(
                             indication = ripple(bounded = true),
                             onClick = {
                               resetControlsTimestamp = System.currentTimeMillis()
-                              viewModel.handleMediaNext()
+                              viewModel.seekBy(10)
                             },
                           ),
                         contentAlignment = Alignment.Center,
                       ) {
                         Icon(
-                          imageVector = Icons.Default.SkipNext,
-                          contentDescription = "Next",
+                          imageVector = Icons.Default.Forward10,
+                          contentDescription = "Forward 10 seconds",
                           tint = if (canGoNext) contentColor.copy(alpha = 0.85f) else contentColor.copy(alpha = 0.35f),
                           modifier = Modifier.size(if (isPlaybackControlsAtBottom) 22.dp else 28.dp),
                         )
@@ -1247,7 +1224,7 @@ fun PlayerControls(
                   ) {
                     Box(
                       modifier = Modifier
-                        .size(if (isPlaybackControlsAtBottom) 36.dp else 44.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .clickable(
                           enabled = canGoPrevious,
@@ -1255,14 +1232,14 @@ fun PlayerControls(
                           indication = ripple(bounded = false),
                           onClick = {
                             resetControlsTimestamp = System.currentTimeMillis()
-                            viewModel.handleMediaPrevious()
+                            viewModel.seekBy(-10)
                           },
                         ),
                       contentAlignment = Alignment.Center,
                     ) {
                       Icon(
-                        imageVector = Icons.Default.SkipPrevious,
-                        contentDescription = "Previous",
+                        imageVector = Icons.Default.Replay10,
+                        contentDescription = "Rewind 10 seconds",
                         tint = if (canGoPrevious) contentColor.copy(alpha = 0.85f) else contentColor.copy(alpha = 0.35f),
                         modifier = Modifier.size(if (isPlaybackControlsAtBottom) 24.dp else 32.dp),
                       )
@@ -1295,7 +1272,7 @@ fun PlayerControls(
 
                     Box(
                       modifier = Modifier
-                        .size(if (isPlaybackControlsAtBottom) 36.dp else 44.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .clickable(
                           enabled = canGoNext,
@@ -1303,14 +1280,14 @@ fun PlayerControls(
                           indication = ripple(bounded = false),
                           onClick = {
                             resetControlsTimestamp = System.currentTimeMillis()
-                            viewModel.handleMediaNext()
+                            viewModel.seekBy(10)
                           },
                         ),
                       contentAlignment = Alignment.Center,
                     ) {
                       Icon(
-                        imageVector = Icons.Default.SkipNext,
-                        contentDescription = "Next",
+                        imageVector = Icons.Default.Forward10,
+                        contentDescription = "Forward 10 seconds",
                         tint = if (canGoNext) contentColor.copy(alpha = 0.85f) else contentColor.copy(alpha = 0.35f),
                         modifier = Modifier.size(if (isPlaybackControlsAtBottom) 24.dp else 32.dp),
                       )

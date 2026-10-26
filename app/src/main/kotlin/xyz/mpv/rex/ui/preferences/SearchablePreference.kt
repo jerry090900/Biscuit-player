@@ -1451,7 +1451,7 @@ object SearchablePreferences {
 
         data class ScoredPreference(val preference: SearchablePreference, val score: Int, val titleLength: Int)
 
-        return allPreferences.mapNotNull { pref ->
+        return allPreferences.filterNot { it.screen == ShortsPreferencesScreen || it.keywords.any { word -> word.contains("shorts", ignoreCase = true) || word == "bottom bar" } }.mapNotNull { pref ->
             val title = (if (pref.titleRes != null) getStringRes(pref.titleRes) else pref.title ?: "").trim()
             val summary = (if (pref.summaryRes != null) getStringRes(pref.summaryRes) else pref.summary ?: "").trim()
             val category = pref.category.trim()

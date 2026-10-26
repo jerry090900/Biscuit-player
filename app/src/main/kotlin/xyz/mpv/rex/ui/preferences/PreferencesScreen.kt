@@ -215,21 +215,6 @@ object PreferencesScreen : Screen {
             }
           }
 
-          // RexShorts Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_category_rexshorts)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.ONLY,
-                  title = stringResource(R.string.pref_category_rexshorts_settings),
-                  summary = stringResource(R.string.pref_category_rexshorts_settings_desc),
-                  icon = Icons.Outlined.VideoLibrary,
-                  onClick = { backstack.add(ShortsPreferencesScreen) },
-                )
-              }
-            }
-          }
-
           // Integrations Section
           item {
             PreferenceSection(title = "Integrations") {

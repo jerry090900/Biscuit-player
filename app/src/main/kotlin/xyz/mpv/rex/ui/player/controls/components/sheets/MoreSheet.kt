@@ -537,12 +537,12 @@ fun ControlsTab(
 
       // Calculate "Orphaned" buttons: items in ALL buttons that are NOT on screen AND NOT in the More Sheet pref
       val allAvailable = xyz.mpv.rex.preferences.allPlayerButtons
-      val orphanedButtons = allAvailable.filter { it !in visibleOnScreen && it !in userOrderedMoreButtons }
+      val orphanedButtons = allAvailable.filter { it !in userOrderedMoreButtons }
 
       // Combine them: User Order first, then the rest
-      (userOrderedMoreButtons + orphanedButtons).filter { button ->
+      (userOrderedMoreButtons + orphanedButtons).distinct().filter { button ->
           // Don't show if already visible on screen
-          if (visibleOnScreen.contains(button)) return@filter false
+          if (button in setOf(PlayerButton.NONE, PlayerButton.MORE_OPTIONS, PlayerButton.BACK_ARROW, PlayerButton.VIDEO_TITLE)) return@filter false
 
           // Functional filters (don't show buttons that can't work)
           when (button) {
@@ -596,12 +596,14 @@ fun ControlsTab(
           modifier = Modifier.padding(bottom = MaterialTheme.spacing.medium)
       )
 
+      buttons.groupBy { xyz.mpv.rex.ui.player.controls.playerControlGroup(it) }.forEach { (group, groupButtons) ->
+      Text(group, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 8.dp))
       FlowRow(
-          horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-          verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.smaller),
-          modifier = Modifier.fillMaxWidth().padding(bottom = MaterialTheme.spacing.medium)
+          horizontalArrangement = Arrangement.spacedBy(8.dp),
+          verticalArrangement = Arrangement.spacedBy(8.dp),
+          modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
       ) {
-          buttons.forEach { button ->
+          groupButtons.forEach { button ->
               RenderPlayerButton(
                   button = button,
                   chapters = chapters,
@@ -631,6 +633,12 @@ fun ControlsTab(
           }
       }
 
+      }
+      FlowRow {
+        TextButton(onClick = { onDismissRequest(); viewModel.panelShown.value = Panels.AudioDelay }) { Text("Audio delay") }
+        TextButton(onClick = { onDismissRequest(); viewModel.panelShown.value = Panels.SubtitleDelay }) { Text("Subtitle delay") }
+        TextButton(onClick = { onDismissRequest(); viewModel.panelShown.value = Panels.SubtitleSettings }) { Text("Subtitle settings") }
+      }
       Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
       InteractionSwitch(

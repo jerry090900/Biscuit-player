@@ -274,6 +274,24 @@ object YouScreen : Screen {
           // ==========================================
           // PROFILE & QUICK ACTIONS HEADER
           // ==========================================
+          item(key = "biscuit_destinations") {
+            Column {
+              listOf(
+                "Network Storage / Streaming" to NetworkStreamingScreen,
+                "Playlists" to PlaylistScreen,
+                "Recently Played" to RecentlyPlayedScreen,
+                "Appearance" to xyz.mpv.rex.ui.preferences.AppearancePreferencesScreen,
+                "Settings" to PreferencesScreen,
+                "About" to xyz.mpv.rex.ui.preferences.AboutScreen,
+              ).forEach { (title, destination) ->
+                androidx.compose.material3.ListItem(
+                  headlineContent = { Text(title) },
+                  modifier = Modifier.clickable { backStack.add(destination) },
+                  trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+                )
+              }
+            }
+          }
           item(key = "profile_header") {
             YouProfileHeader(
               name = customProfileName,
@@ -285,8 +303,8 @@ object YouScreen : Screen {
               playlistCount = playlistsWithCount.size,
               onHistoryClick = { backStack.add(RecentlyPlayedScreen) },
               onPlaylistsClick = { backStack.add(PlaylistScreen) },
-              onNetworkClick = if (!enableTabNetwork) { { backStack.add(NetworkStreamingScreen) } } else null,
-              onShortsClick = if (!isShortsEnabled) { { backStack.add(ShortsScreen()) } } else null,
+              onNetworkClick = { backStack.add(NetworkStreamingScreen) },
+              onShortsClick = null,
             )
           }
 

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Icon
@@ -63,7 +64,6 @@ import xyz.mpv.rex.ui.browser.folderlist.FolderListScreen
 import xyz.mpv.rex.ui.browser.networkstreaming.NetworkStreamingScreen
 import xyz.mpv.rex.ui.browser.playlist.PlaylistScreen
 import xyz.mpv.rex.ui.browser.recentlyplayed.RecentlyPlayedScreen
-import xyz.mpv.rex.ui.browser.shorts.ShortsScreen
 import xyz.mpv.rex.ui.browser.you.YouScreen
 import xyz.mpv.rex.ui.browser.selection.SelectionManager
 import xyz.mpv.rex.ui.browser.miniplayer.MiniPlayer
@@ -178,12 +178,7 @@ object MainScreen : Screen {
     val appearancePreferences = koinInject<AppearancePreferences>()
     val miniPlayerStateManager = koinInject<MiniPlayerStateManager>()
     val miniPlayerState by miniPlayerStateManager.state.collectAsState()
-    val isShortsEnabled by browserPreferences.enableShorts.collectAsState()
-    val enableTabYou by browserPreferences.enableTabYou.collectAsState()
-    val enableTabRecents by browserPreferences.enableTabRecents.collectAsState()
-    val enableTabPlaylists by browserPreferences.enableTabPlaylists.collectAsState()
-    val enableTabNetwork by browserPreferences.enableTabNetwork.collectAsState()
-    val bottomNavOrder by browserPreferences.bottomNavOrder.collectAsState()
+    val isShortsEnabled = false
     val customProfileImagePath by appearancePreferences.customProfileImagePath.collectAsState()
 
     val customAvatarBitmap = remember(customProfileImagePath) {
@@ -199,68 +194,13 @@ object MainScreen : Screen {
       } else null
     }
 
-    val homeLabel = stringResource(R.string.home)
-    val shortsLabel = stringResource(R.string.shorts)
-    val youLabel = stringResource(R.string.you)
-    val recentsLabel = stringResource(R.string.recents)
-    val playlistsLabel = stringResource(R.string.playlists)
-    val networkLabel = stringResource(R.string.network)
-
-    val visibleTabs = remember(
-      isShortsEnabled, enableTabYou, enableTabRecents, enableTabPlaylists, enableTabNetwork,
-      bottomNavOrder,
-      homeLabel, shortsLabel, youLabel, recentsLabel, playlistsLabel, networkLabel
-    ) {
-      val rawTabs = buildList {
-        add(
-          VisibleTab("home", "Library", Icons.Outlined.VideoLibrary) {
-            FolderListScreen.Content()
-          }
-        )
-        if (isShortsEnabled) {
-          add(
-            VisibleTab("shorts", shortsLabel, Icons.Outlined.VideoLibrary) {
-              ShortsScreen().Content()
-            }
-          )
-        }
-        if (!enableTabYou) {
-          if (enableTabRecents) {
-            add(
-              VisibleTab("recents", recentsLabel, Icons.Filled.History) {
-                RecentlyPlayedScreen.Content()
-              }
-            )
-          }
-          if (enableTabPlaylists) {
-            add(
-              VisibleTab("playlists", playlistsLabel, Icons.AutoMirrored.Filled.PlaylistPlay) {
-                PlaylistScreen.Content()
-              }
-            )
-          }
-        }
-        if (enableTabNetwork) {
-          add(
-            VisibleTab("network", networkLabel, Icons.Filled.Language) {
-              NetworkStreamingScreen.Content()
-            }
-          )
-        }
-        if (enableTabYou) {
-          add(
-            VisibleTab("you", youLabel, Icons.Filled.AccountCircle) {
-              YouScreen.Content()
-            }
-          )
-        }
-      }
-
-      val orderList = browserPreferences.getBottomNavOrder()
-      rawTabs.sortedBy { tab ->
-        val idx = orderList.indexOf(tab.id)
-        if (idx == -1) Int.MAX_VALUE else idx
-      } + VisibleTab("cinema", "Home", Icons.Filled.Home) { xyz.mpv.rex.ui.browser.home.CinematicHome() }
+    val visibleTabs = remember {
+      listOf(
+        VisibleTab("cinema", "Home", Icons.Filled.Home) { xyz.mpv.rex.ui.browser.home.CinematicHome() },
+        VisibleTab("home", "Library", Icons.Outlined.VideoLibrary) { FolderListScreen.Content() },
+        VisibleTab("audio", "Audio", androidx.compose.material.icons.Icons.Filled.MusicNote) { xyz.mpv.rex.ui.browser.audio.LocalAudioScreen() },
+        VisibleTab("you", "You", Icons.Filled.AccountCircle) { YouScreen.Content() },
+      )
     }
 
     // Ensure selectedTab is always clamped within active tabs range
@@ -360,7 +300,7 @@ object MainScreen : Screen {
     }
 
     // Keep the first frame dark while the initial Home tab is resolved.
-    val cinematicSelected = selectedTab < 0 || visibleTabs.getOrNull(selectedTab)?.id == "cinema"
+    val cinematicSelected = true
     // Scaffold with bottom navigation bar
     Scaffold(
       modifier = Modifier.fillMaxSize(),
@@ -388,7 +328,7 @@ object MainScreen : Screen {
             ) {
               val itemColors = if (cinematicSelected) {
                 NavigationBarItemDefaults.colors(selectedIconColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.accent,
-                  selectedTextColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.ink,
+                  selectedTextColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.accentInk,
                   unselectedIconColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.muted,
                   unselectedTextColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.muted,
                   indicatorColor = xyz.mpv.rex.ui.browser.home.BiscuitCinema.surface)
@@ -424,7 +364,7 @@ object MainScreen : Screen {
                           .clip(CircleShape)
                           .border(
                             width = if (selectedTab == index) 1.5.dp else 1.dp,
-                            color = if (selectedTab == index) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                            color = if (selectedTab == index) xyz.mpv.rex.ui.browser.home.BiscuitCinema.accent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                             shape = CircleShape,
                           ),
                       )
