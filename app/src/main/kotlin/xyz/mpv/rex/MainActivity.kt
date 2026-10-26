@@ -46,6 +46,8 @@ import xyz.mpv.rex.utils.update.UpdateDialog
 import xyz.mpv.rex.utils.update.UpdateManager
 import xyz.mpv.rex.utils.update.UpdateViewModel
 import xyz.mpv.rex.ui.browser.MainScreen
+import xyz.mpv.rex.ui.theme.AppTheme
+import xyz.mpv.rex.ui.theme.BiscuitSurfaceTheme
 import xyz.mpv.rex.ui.theme.DarkMode
 import xyz.mpv.rex.ui.theme.MpvexTheme
 import xyz.mpv.rex.ui.utils.LocalBackStack
@@ -115,14 +117,23 @@ class MainActivity : ComponentActivity() {
         ) { isDarkMode },
       )
 
-      // Auto-connect to saved network connections
+      // One-time rebrand migration: existing installs start in Biscuit's cohesive
+      // black/red Default appearance, but users remain free to choose another theme later.
       LaunchedEffect(Unit) {
+        if (!appearancePreferences.biscuitVisualMigrationDone.get()) {
+          appearancePreferences.appTheme.set(AppTheme.Default)
+          appearancePreferences.darkMode.set(DarkMode.Dark)
+          appearancePreferences.amoledMode.set(true)
+          appearancePreferences.biscuitVisualMigrationDone.set(true)
+        }
         autoConnectToNetworks()
       }
 
       MpvexTheme {
-        Surface {
-          Navigator()
+        BiscuitSurfaceTheme {
+          Surface {
+            Navigator()
+          }
         }
       }
     }
@@ -137,7 +148,7 @@ class MainActivity : ComponentActivity() {
   }
 
   /**
-   * Auto-connect to network connections that are marked for auto-connection
+   * Auto-connect to saved network connections that are marked for auto-connection
    */
   private suspend fun autoConnectToNetworks() {
     // Delay auto-connect to let UI settle first
