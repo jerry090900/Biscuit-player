@@ -1,7 +1,8 @@
 package xyz.mpv.rex.ui.browser.home
 
-import android.media.AudioManager
-import android.widget.VideoView
+import android.media.MediaPlayer
+import android.view.Surface
+import android.view.TextureView
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -86,7 +87,7 @@ fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visi
       }
     }
     if (items.size > 1) {
-      // Keep navigation feedback minimal: no progress strip in the hero.
+      // Minimal position feedback only: no red progress strip in the hero.
       Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
         Text("${pager.currentPage + 1} / ${items.size}", color = BiscuitCinema.muted, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterEnd))
       }
@@ -95,9 +96,12 @@ fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visi
 }
 
 /**
- * Lightweight muted hero preview. Main playback still uses Biscuit's mpv engine;
- * this Android platform preview is deliberately isolated to the Home hero and
- * falls back to the cached thumbnail if the platform decoder cannot open a file.
+ * Lightweight silent preview for the Home hero.
+ *
+ * Main playback remains entirely on Biscuit's mpv path. The platform MediaPlayer
+ * is isolated to this decorative preview, never requests audio focus, and is
+ * always volume-zero. Unsupported platform codecs simply fall back to the cached
+ * thumbnail instead of affecting normal Biscuit playback.
  */
 @Composable
 private fun HeroMutedPreview(video: Video?, active: Boolean, modifier: Modifier = Modifier) {
@@ -109,52 +113,84 @@ private fun HeroMutedPreview(video: Video?, active: Boolean, modifier: Modifier 
   val activeState = rememberUpdatedState(active)
   var prepared by remember(video.uri) { mutableStateOf(false) }
   var failed by remember(video.uri) { mutableStateOf(false) }
-  var videoView by remember(video.uri) { mutableStateOf<VideoView?>(null) }
+  var player by remember(video.uri) { mutableStateOf<MediaPlayer?>(null) }
+
+  fun releasePlayer() {
+    val old = player
+    player = null
+    prepared = false
+    old?.let { runCatching { it.stop() }; runCatching { it.release() } }
+  }
 
   Box(modifier) {
     if (!failed) {
       AndroidView(
         modifier = Modifier.matchParentSize(),
         factory = { context ->
-          VideoView(context).apply {
-            videoView = this
-            // A silent preview must never steal focus from music or other audio.
-            setAudioFocusRequest(AudioManager.AUDIOFOCUS_NONE)
-            setVideoURI(video.uri)
-            setOnPreparedListener { player ->
-              player.setVolume(0f, 0f)
-              player.isLooping = true
-              prepared = true
-              if (activeState.value) start()
-            }
-            setOnErrorListener { _, _, _ ->
-              failed = true
-              prepared = false
-              true
+          TextureView(context).apply {
+            surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+              override fun onSurfaceTextureAvailable(surfaceTexture: android.graphics.SurfaceTexture, width: Int, height: Int) {
+                releasePlayer()
+                try {
+                  val mediaPlayer = MediaPlayer()
+                  player = mediaPlayer
+                  mediaPlayer.setDataSource(context, video.uri)
+                  val surface = Surface(surfaceTexture)
+                  mediaPlayer.setSurface(surface)
+                  surface.release()
+                  mediaPlayer.setVolume(0f, 0f)
+                  mediaPlayer.isLooping = true
+                  mediaPlayer.setOnPreparedListener { preparedPlayer ->
+                    preparedPlayer.setVolume(0f, 0f)
+                    prepared = true
+                    if (activeState.value) preparedPlayer.start()
+                  }
+                  mediaPlayer.setOnErrorListener { failedPlayer, _, _ ->
+                    if (player === failedPlayer) player = null
+                    prepared = false
+                    failed = true
+                    runCatching { failedPlayer.release() }
+                    true
+                  }
+                  mediaPlayer.prepareAsync()
+                } catch (_: Exception) {
+                  releasePlayer()
+                  failed = true
+                }
+              }
+
+              override fun onSurfaceTextureSizeChanged(surfaceTexture: android.graphics.SurfaceTexture, width: Int, height: Int) = Unit
+
+              override fun onSurfaceTextureDestroyed(surfaceTexture: android.graphics.SurfaceTexture): Boolean {
+                releasePlayer()
+                return true
+              }
+
+              override fun onSurfaceTextureUpdated(surfaceTexture: android.graphics.SurfaceTexture) = Unit
             }
           }
         },
-        update = { view ->
-          if (prepared && active) {
-            if (!view.isPlaying) view.start()
-          } else if (view.isPlaying) {
-            view.pause()
+        update = {
+          val current = player
+          if (prepared && current != null) {
+            if (active) {
+              if (!current.isPlaying) runCatching { current.start() }
+            } else if (current.isPlaying) {
+              runCatching { current.pause() }
+            }
           }
         },
       )
     }
 
-    // Keep the existing cached frame visible while the preview prepares or if
-    // Android's platform decoder cannot handle this particular file/codec.
+    // Keep the existing cached frame visible while the silent preview prepares,
+    // or permanently if Android's platform decoder cannot open this video.
     if (!prepared || failed) {
       HomeThumbnail(video, Modifier.matchParentSize(), true)
     }
   }
 
   DisposableEffect(video.uri) {
-    onDispose {
-      runCatching { videoView?.stopPlayback() }
-      videoView = null
-    }
+    onDispose { releasePlayer() }
   }
 }
