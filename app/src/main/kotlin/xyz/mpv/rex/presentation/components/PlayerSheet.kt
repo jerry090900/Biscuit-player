@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -80,19 +79,21 @@ fun PlayerSheet(
 ) {
   val scope = rememberCoroutineScope()
   val density = LocalDensity.current
+  val configuration = LocalConfiguration.current
   val latestOnDismissRequest by rememberUpdatedState(onDismissRequest)
   val maxWidth = customMaxWidth ?:
-  if (LocalConfiguration.current.orientation == ORIENTATION_LANDSCAPE) {
-    640.dp
+  if (configuration.orientation == ORIENTATION_LANDSCAPE) {
+    // Keep landscape sheets compact so the video remains visible behind controls.
+    520.dp
   } else {
     420.dp
   }
   val isImeVisible = WindowInsets.ime.getBottom(density) > 0
   val maxHeight = customMaxHeight ?: when {
-    isImeVisible -> LocalConfiguration.current.screenHeightDp.dp
-    LocalConfiguration.current.orientation == ORIENTATION_PORTRAIT ->
-      LocalConfiguration.current.screenHeightDp.dp * .90f
-    else -> LocalConfiguration.current.screenHeightDp.dp
+    isImeVisible -> configuration.screenHeightDp.dp
+    configuration.orientation == ORIENTATION_PORTRAIT ->
+      configuration.screenHeightDp.dp * .90f
+    else -> configuration.screenHeightDp.dp * .86f
   }
 
   var backgroundAlpha by remember { mutableFloatStateOf(0f) }
