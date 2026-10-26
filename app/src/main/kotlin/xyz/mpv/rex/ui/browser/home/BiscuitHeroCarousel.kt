@@ -99,7 +99,7 @@ fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visi
  * Lightweight silent preview for the Home hero.
  *
  * Main playback remains entirely on Biscuit's mpv path. The platform MediaPlayer
- * is isolated to this decorative preview, never requests audio focus, and is
+ * is isolated to this decorative preview, does not request audio focus, and is
  * always volume-zero. Unsupported platform codecs simply fall back to the cached
  * thumbnail instead of affecting normal Biscuit playback.
  */
@@ -143,7 +143,7 @@ private fun HeroMutedPreview(video: Video?, active: Boolean, modifier: Modifier 
                   mediaPlayer.setOnPreparedListener { preparedPlayer ->
                     preparedPlayer.setVolume(0f, 0f)
                     prepared = true
-                    if (activeState.value) preparedPlayer.start()
+                    if (activeState.value) runCatching { preparedPlayer.start() }
                   }
                   mediaPlayer.setOnErrorListener { failedPlayer, _, _ ->
                     if (player === failedPlayer) player = null
@@ -173,9 +173,10 @@ private fun HeroMutedPreview(video: Video?, active: Boolean, modifier: Modifier 
         update = {
           val current = player
           if (prepared && current != null) {
+            val playing = runCatching { current.isPlaying }.getOrDefault(false)
             if (active) {
-              if (!current.isPlaying) runCatching { current.start() }
-            } else if (current.isPlaying) {
+              if (!playing) runCatching { current.start() }
+            } else if (playing) {
               runCatching { current.pause() }
             }
           }
