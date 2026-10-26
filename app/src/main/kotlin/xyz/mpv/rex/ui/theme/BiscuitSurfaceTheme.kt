@@ -3,11 +3,16 @@ package xyz.mpv.rex.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import org.koin.compose.koinInject
+import xyz.mpv.rex.preferences.AppearancePreferences
+import xyz.mpv.rex.preferences.preference.collectAsState
 
 /**
- * Biscuit's product-level dark surface. This is intentionally a presentation
- * wrapper: feature logic, repositories, persistence and player behavior stay unchanged.
+ * Biscuit's product-level dark surface. When the built-in Default theme is active,
+ * secondary app screens inherit Biscuit's black/red identity. Selecting any other
+ * Appearance theme immediately returns those screens to the user's chosen palette.
  */
 private val BiscuitColorScheme = darkColorScheme(
   primary = Color(0xFFBD2946),
@@ -32,10 +37,17 @@ private val BiscuitColorScheme = darkColorScheme(
 
 @Composable
 fun BiscuitSurfaceTheme(content: @Composable () -> Unit) {
-  MaterialTheme(
-    colorScheme = BiscuitColorScheme,
-    typography = MaterialTheme.typography,
-    shapes = MaterialTheme.shapes,
-    content = content,
-  )
+  val preferences = koinInject<AppearancePreferences>()
+  val appTheme by preferences.appTheme.collectAsState()
+
+  if (appTheme == AppTheme.Default) {
+    MaterialTheme(
+      colorScheme = BiscuitColorScheme,
+      typography = MaterialTheme.typography,
+      shapes = MaterialTheme.shapes,
+      content = content,
+    )
+  } else {
+    content()
+  }
 }
