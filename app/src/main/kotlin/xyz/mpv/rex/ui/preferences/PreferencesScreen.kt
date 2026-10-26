@@ -38,7 +38,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +53,7 @@ import xyz.mpv.rex.presentation.Screen
 import xyz.mpv.rex.presentation.components.GroupPosition
 import xyz.mpv.rex.presentation.components.GroupedListColumn
 import xyz.mpv.rex.presentation.components.GroupedListItem
+import xyz.mpv.rex.ui.theme.BiscuitSurfaceTheme
 import xyz.mpv.rex.ui.utils.LocalBackStack
 
 @Serializable
@@ -61,200 +61,196 @@ object PreferencesScreen : Screen {
   @OptIn(ExperimentalMaterial3Api::class)
   @Composable
   override fun Content() {
-    val backstack = LocalBackStack.current
-    val searchShape = RoundedCornerShape(24.dp)
-    Scaffold(
-      topBar = {
-        TopAppBar(
-          title = { 
-            Text(
-              text = stringResource(R.string.pref_preferences),
-              style = MaterialTheme.typography.headlineSmall,
-              fontWeight = FontWeight.ExtraBold,
-              color = MaterialTheme.colorScheme.primary,
-            )
-          },
-          navigationIcon = {
-            IconButton(onClick = backstack::removeLastOrNull) {
-              Icon(
-                Icons.AutoMirrored.Outlined.ArrowBack, 
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
+    BiscuitSurfaceTheme {
+      val backstack = LocalBackStack.current
+      val searchShape = RoundedCornerShape(24.dp)
+      Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+          TopAppBar(
+            title = {
+              Text(
+                text = stringResource(R.string.pref_preferences),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground,
               )
-            }
-          },
-        )
-      },
-    ) { padding ->
-      val navBarHeight = xyz.mpv.rex.ui.browser.LocalNavigationBarHeight.current
-      ProvidePreferenceLocals {
-        LazyColumn(
-          modifier = Modifier
-            .fillMaxSize()
-            .padding(padding),
-          contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = navBarHeight + 24.dp),
-          verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-          // Search bar - full width, prominent placement
-          item {
-            Surface(
-              onClick = { backstack.add(SettingsSearchScreen) },
-              shape = searchShape,
-              modifier = Modifier
-                .fillMaxWidth()
-                .clip(searchShape),
-              color = MaterialTheme.colorScheme.surfaceContainerHigh,
-              tonalElevation = 2.dp,
-            ) {
-              Row(
+            },
+            navigationIcon = {
+              IconButton(onClick = backstack::removeLastOrNull) {
+                Icon(
+                  Icons.AutoMirrored.Outlined.ArrowBack,
+                  contentDescription = null,
+                  tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+              }
+            },
+          )
+        },
+      ) { padding ->
+        val navBarHeight = xyz.mpv.rex.ui.browser.LocalNavigationBarHeight.current
+        ProvidePreferenceLocals {
+          LazyColumn(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = navBarHeight + 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+          ) {
+            item {
+              Surface(
+                onClick = { backstack.add(SettingsSearchScreen) },
+                shape = searchShape,
                 modifier = Modifier
                   .fillMaxWidth()
-                  .padding(horizontal = 18.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                  .clip(searchShape),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                tonalElevation = 0.dp,
               ) {
-                Icon(
-                  imageVector = Icons.Outlined.Search,
-                  contentDescription = null,
-                  tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(14.dp))
-                Text(
-                  text = stringResource(R.string.settings_search_hint),
-                  style = MaterialTheme.typography.bodyLarge,
-                  color = MaterialTheme.colorScheme.outline,
-                )
+                Row(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                ) {
+                  Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                  )
+                  Spacer(modifier = Modifier.width(14.dp))
+                  Text(
+                    text = stringResource(R.string.settings_search_hint),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                  )
+                }
               }
             }
-          }
 
-          // UI & Appearance Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_category_ui_appearance)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.ONLY,
-                  title = stringResource(id = R.string.pref_appearance_title),
-                  summary = stringResource(id = R.string.pref_appearance_summary),
-                  icon = Icons.Outlined.Palette,
-                  onClick = { backstack.add(AppearancePreferencesScreen) },
-                )
+            item {
+              PreferenceSection(title = stringResource(R.string.pref_category_ui_appearance)) {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.ONLY,
+                    title = stringResource(id = R.string.pref_appearance_title),
+                    summary = stringResource(id = R.string.pref_appearance_summary),
+                    icon = Icons.Outlined.Palette,
+                    onClick = { backstack.add(AppearancePreferencesScreen) },
+                  )
+                }
               }
             }
-          }
 
-          // Playback & Controls Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_category_playback_controls)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.FIRST,
-                  title = stringResource(id = R.string.pref_player),
-                  summary = stringResource(id = R.string.pref_player_summary),
-                  icon = Icons.Outlined.PlayCircle,
-                  onClick = { backstack.add(PlayerPreferencesScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.MIDDLE,
-                  title = stringResource(id = R.string.pref_layout_title),
-                  summary = stringResource(id = R.string.pref_layout_summary),
-                  icon = Icons.AutoMirrored.Outlined.ViewQuilt,
-                  onClick = { backstack.add(PlayerControlsPreferencesScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.LAST,
-                  title = stringResource(id = R.string.pref_gesture),
-                  summary = stringResource(id = R.string.pref_gesture_summary),
-                  icon = Icons.Outlined.Gesture,
-                  onClick = { backstack.add(GesturePreferencesScreen) },
-                )
+            item {
+              PreferenceSection(title = stringResource(R.string.pref_category_playback_controls)) {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.FIRST,
+                    title = stringResource(id = R.string.pref_player),
+                    summary = stringResource(id = R.string.pref_player_summary),
+                    icon = Icons.Outlined.PlayCircle,
+                    onClick = { backstack.add(PlayerPreferencesScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.MIDDLE,
+                    title = stringResource(id = R.string.pref_layout_title),
+                    summary = stringResource(id = R.string.pref_layout_summary),
+                    icon = Icons.AutoMirrored.Outlined.ViewQuilt,
+                    onClick = { backstack.add(PlayerControlsPreferencesScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.LAST,
+                    title = stringResource(id = R.string.pref_gesture),
+                    summary = stringResource(id = R.string.pref_gesture_summary),
+                    icon = Icons.Outlined.Gesture,
+                    onClick = { backstack.add(GesturePreferencesScreen) },
+                  )
+                }
               }
             }
-          }
 
-          // Media & Library Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_media_library_title)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.ONLY,
-                  title = stringResource(R.string.pref_media_library_title),
-                  summary = stringResource(R.string.pref_media_library_summary),
-                  icon = Icons.Outlined.VideoLibrary,
-                  onClick = { backstack.add(MediaLibraryPreferencesScreen) },
-                )
+            item {
+              PreferenceSection(title = stringResource(R.string.pref_media_library_title)) {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.ONLY,
+                    title = stringResource(R.string.pref_media_library_title),
+                    summary = stringResource(R.string.pref_media_library_summary),
+                    icon = Icons.Outlined.VideoLibrary,
+                    onClick = { backstack.add(MediaLibraryPreferencesScreen) },
+                  )
+                }
               }
             }
-          }
 
-          // Media Settings Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_category_media_settings)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.FIRST,
-                  title = stringResource(id = R.string.pref_decoder),
-                  summary = stringResource(id = R.string.pref_decoder_summary),
-                  icon = Icons.Outlined.Memory,
-                  onClick = { backstack.add(DecoderPreferencesScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.MIDDLE,
-                  title = stringResource(id = R.string.pref_subtitles),
-                  summary = stringResource(id = R.string.pref_subtitles_summary),
-                  icon = Icons.Outlined.Subtitles,
-                  onClick = { backstack.add(SubtitlesPreferencesScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.LAST,
-                  title = stringResource(id = R.string.pref_audio),
-                  summary = stringResource(id = R.string.pref_audio_summary),
-                  icon = Icons.Outlined.Audiotrack,
-                  onClick = { backstack.add(AudioPreferencesScreen) },
-                )
+            item {
+              PreferenceSection(title = stringResource(R.string.pref_category_media_settings)) {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.FIRST,
+                    title = stringResource(id = R.string.pref_decoder),
+                    summary = stringResource(id = R.string.pref_decoder_summary),
+                    icon = Icons.Outlined.Memory,
+                    onClick = { backstack.add(DecoderPreferencesScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.MIDDLE,
+                    title = stringResource(id = R.string.pref_subtitles),
+                    summary = stringResource(id = R.string.pref_subtitles_summary),
+                    icon = Icons.Outlined.Subtitles,
+                    onClick = { backstack.add(SubtitlesPreferencesScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.LAST,
+                    title = stringResource(id = R.string.pref_audio),
+                    summary = stringResource(id = R.string.pref_audio_summary),
+                    icon = Icons.Outlined.Audiotrack,
+                    onClick = { backstack.add(AudioPreferencesScreen) },
+                  )
+                }
               }
             }
-          }
 
-          // Integrations Section
-          item {
-            PreferenceSection(title = "Integrations") {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.FIRST,
-                  title = "Jellyfin",
-                  summary = "External player sync",
-                  icon = Icons.Outlined.VideoLibrary,
-                  onClick = { backstack.add(xyz.mpv.rex.jellyfin.ui.JellyfinSettingsScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.LAST,
-                  title = "yt-dlp",
-                  summary = "Manage REX Ytdlp & extractor preferences",
-                  icon = Icons.Outlined.CloudDownload,
-                  onClick = { backstack.add(YtdlSettingsScreen) },
-                )
+            item {
+              PreferenceSection(title = "Integrations") {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.FIRST,
+                    title = "Jellyfin",
+                    summary = "External player sync",
+                    icon = Icons.Outlined.VideoLibrary,
+                    onClick = { backstack.add(xyz.mpv.rex.jellyfin.ui.JellyfinSettingsScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.LAST,
+                    title = "yt-dlp",
+                    summary = "Manage REX Ytdlp & extractor preferences",
+                    icon = Icons.Outlined.CloudDownload,
+                    onClick = { backstack.add(YtdlSettingsScreen) },
+                  )
+                }
               }
             }
-          }
 
-          // Advanced & About Section
-          item {
-            PreferenceSection(title = stringResource(R.string.pref_category_advanced_about)) {
-              GroupedListColumn {
-                PreferenceItem(
-                  position = GroupPosition.FIRST,
-                  title = stringResource(R.string.pref_advanced),
-                  summary = stringResource(id = R.string.pref_advanced_summary),
-                  icon = Icons.Outlined.Code,
-                  onClick = { backstack.add(AdvancedPreferencesScreen) },
-                )
-                PreferenceItem(
-                  position = GroupPosition.LAST,
-                  title = stringResource(id = R.string.pref_about_title),
-                  summary = stringResource(id = R.string.pref_about_summary),
-                  icon = Icons.Outlined.Info,
-                  onClick = { backstack.add(AboutScreen) },
-                )
+            item {
+              PreferenceSection(title = stringResource(R.string.pref_category_advanced_about)) {
+                GroupedListColumn {
+                  PreferenceItem(
+                    position = GroupPosition.FIRST,
+                    title = stringResource(R.string.pref_advanced),
+                    summary = stringResource(id = R.string.pref_advanced_summary),
+                    icon = Icons.Outlined.Code,
+                    onClick = { backstack.add(AdvancedPreferencesScreen) },
+                  )
+                  PreferenceItem(
+                    position = GroupPosition.LAST,
+                    title = stringResource(id = R.string.pref_about_title),
+                    summary = stringResource(id = R.string.pref_about_summary),
+                    icon = Icons.Outlined.Info,
+                    onClick = { backstack.add(AboutScreen) },
+                  )
+                }
               }
             }
           }
