@@ -1,5 +1,7 @@
 package xyz.mpv.rex.ui.browser.home
 
+import android.media.AudioManager
+import android.widget.VideoView
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -19,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -62,31 +65,96 @@ fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visi
         }
       }) { page ->
       val hero = items[page]
+      val video = videos[hero.key]
+      val previewActive = page == pager.settledPage && visible && resumed
       BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(BiscuitCinema.cardShape)) {
         // Minimum rather than fixed height allows large type to grow the content.
         val height = if (maxWidth > 700.dp) 360.dp else 440.dp
         Box(Modifier.fillMaxWidth().heightIn(min = height).background(BiscuitCinema.surface)) {
-          HomeThumbnail(videos[hero.key], Modifier.matchParentSize(), true)
+          HeroMutedPreview(video = video, active = previewActive, modifier = Modifier.matchParentSize())
           Box(Modifier.matchParentSize().background(Brush.verticalGradient(BiscuitCinema.scrim)))
           Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 140.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("RECENTLY ADDED", color = BiscuitCinema.accentInk, fontSize = 11.sp, letterSpacing = 2.sp)
             Text(hero.title.substringBeforeLast('.'), color = BiscuitCinema.ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
             Text("${hero.folder} · ${hero.durationMs / 60000} min", color = BiscuitCinema.muted)
-            if (hero.progress > 0) LinearProgressIndicator(progress = { hero.progress }, modifier = Modifier.fillMaxWidth(), color = BiscuitCinema.accent)
             androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
               Button(onClick = { onPlay(hero) }, colors = ButtonDefaults.buttonColors(containerColor = BiscuitCinema.accent, contentColor = BiscuitCinema.ink), modifier = Modifier.heightIn(min = 48.dp)) { Text(if (hero.resumable) "Continue" else "Play") }
-              OutlinedButton(onClick = { videos[hero.key]?.let(onInfo) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("More Info", color = BiscuitCinema.ink) }
+              OutlinedButton(onClick = { video?.let(onInfo) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("More Info", color = BiscuitCinema.ink) }
             }
           }
         }
       }
     }
     if (items.size > 1) {
-      // Constant-size indicator even for thousands of items; no thousands of dots.
-      Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        LinearProgressIndicator(progress = { (pager.currentPage + 1f) / items.size }, modifier = Modifier.weight(1f), color = BiscuitCinema.accent, trackColor = BiscuitCinema.surface)
-        Text("${pager.currentPage + 1} / ${items.size}", color = BiscuitCinema.muted, fontSize = 12.sp)
+      // Keep navigation feedback minimal: no progress strip in the hero.
+      Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+        Text("${pager.currentPage + 1} / ${items.size}", color = BiscuitCinema.muted, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterEnd))
       }
+    }
+  }
+}
+
+/**
+ * Lightweight muted hero preview. Main playback still uses Biscuit's mpv engine;
+ * this Android platform preview is deliberately isolated to the Home hero and
+ * falls back to the cached thumbnail if the platform decoder cannot open a file.
+ */
+@Composable
+private fun HeroMutedPreview(video: Video?, active: Boolean, modifier: Modifier = Modifier) {
+  if (video == null) {
+    Box(modifier.background(BiscuitCinema.surface))
+    return
+  }
+
+  val activeState = rememberUpdatedState(active)
+  var prepared by remember(video.uri) { mutableStateOf(false) }
+  var failed by remember(video.uri) { mutableStateOf(false) }
+  var videoView by remember(video.uri) { mutableStateOf<VideoView?>(null) }
+
+  Box(modifier) {
+    if (!failed) {
+      AndroidView(
+        modifier = Modifier.matchParentSize(),
+        factory = { context ->
+          VideoView(context).apply {
+            videoView = this
+            // A silent preview must never steal focus from music or other audio.
+            setAudioFocusRequest(AudioManager.AUDIOFOCUS_NONE)
+            setVideoURI(video.uri)
+            setOnPreparedListener { player ->
+              player.setVolume(0f, 0f)
+              player.isLooping = true
+              prepared = true
+              if (activeState.value) start()
+            }
+            setOnErrorListener { _, _, _ ->
+              failed = true
+              prepared = false
+              true
+            }
+          }
+        },
+        update = { view ->
+          if (prepared && active) {
+            if (!view.isPlaying) view.start()
+          } else if (view.isPlaying) {
+            view.pause()
+          }
+        },
+      )
+    }
+
+    // Keep the existing cached frame visible while the preview prepares or if
+    // Android's platform decoder cannot handle this particular file/codec.
+    if (!prepared || failed) {
+      HomeThumbnail(video, Modifier.matchParentSize(), true)
+    }
+  }
+
+  DisposableEffect(video.uri) {
+    onDispose {
+      runCatching { videoView?.stopPlayback() }
+      videoView = null
     }
   }
 }
