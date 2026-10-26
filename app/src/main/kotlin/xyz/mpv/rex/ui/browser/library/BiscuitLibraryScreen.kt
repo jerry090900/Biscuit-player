@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -148,23 +147,22 @@ fun BiscuitLibraryScreen() {
         Modifier
           .fillMaxSize()
           .background(Color(0xFF09090B))
-          .statusBarsPadding()
           .padding(top = inner.calculateTopPadding()),
       ) {
         Row(
-          Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 8.dp, bottom = 4.dp),
+          Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 2.dp, bottom = 2.dp),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Image(
             painter = painterResource(R.drawable.biscuit_launcher_foreground),
             contentDescription = "Biscuit Player",
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(44.dp),
           )
           Spacer(Modifier.width(12.dp))
           Text(
             "Biscuit Player",
             color = Color(0xFFF7F7FA),
-            fontSize = 25.sp,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f),
           )
