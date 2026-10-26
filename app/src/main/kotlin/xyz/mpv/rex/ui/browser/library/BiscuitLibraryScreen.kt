@@ -79,7 +79,7 @@ import xyz.mpv.rex.ui.browser.home.BiscuitCinema
 import xyz.mpv.rex.ui.browser.playlist.PlaylistScreen
 import xyz.mpv.rex.ui.browser.recentlyplayed.RecentlyPlayedScreen
 import xyz.mpv.rex.ui.browser.states.PermissionDeniedState
-import xyz.mpv.rex.ui.browser.videolist.VideoListScreen
+import xyz.mpv.rex.ui.preferences.BiscuitPreferencesScreen
 import xyz.mpv.rex.ui.utils.LocalBackStack
 import xyz.mpv.rex.utils.history.RecentlyPlayedOps
 import xyz.mpv.rex.utils.media.MediaUtils
@@ -183,7 +183,7 @@ fun BiscuitLibraryScreen() {
               )
               DropdownMenuItem(
                 text = { Text("Settings") },
-                onClick = { overflow = false; backstack.add(xyz.mpv.rex.ui.preferences.PreferencesScreen) },
+                onClick = { overflow = false; backstack.add(BiscuitPreferencesScreen) },
               )
             }
           }
@@ -239,7 +239,7 @@ fun BiscuitLibraryScreen() {
                 items(visibleFolders, key = { it.bucketId }) { folder ->
                   BiscuitLibraryFolderRow(
                     folder = folder,
-                    onOpen = { backstack.add(VideoListScreen(folder.bucketId, folder.name)) },
+                    onOpen = { backstack.add(BiscuitVideoListScreen(folder.bucketId, folder.name)) },
                     onPlayAll = {
                       scope.launch {
                         val videos = withContext(Dispatchers.IO) {
