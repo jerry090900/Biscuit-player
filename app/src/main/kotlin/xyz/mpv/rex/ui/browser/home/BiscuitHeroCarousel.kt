@@ -14,6 +14,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -32,7 +36,8 @@ import xyz.mpv.rex.domain.media.model.Video
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visible: Boolean,
-  configuration: HeroConfiguration = HeroConfiguration(), onPlay: (HomeMedia) -> Unit, onInfo: (Video) -> Unit) {
+  configuration: HeroConfiguration = HeroConfiguration(), onPlay: (HomeMedia) -> Unit, onInfo: (Video) -> Unit,
+  selectionMode: Boolean = false, selectedKeys: Set<String> = emptySet(), onSelect: (HomeMedia) -> Unit = {}) {
   val pager = rememberPagerState { items.size }
   val dragging by pager.interactionSource.collectIsDraggedAsState()
   var touching by remember { mutableStateOf(false) }
@@ -67,18 +72,21 @@ fun BiscuitHeroCarousel(items: List<HomeMedia>, videos: Map<String, Video>, visi
       }) { page ->
       val hero = items[page]
       val video = videos[hero.key]
+      val isSelected = video?.uri.toString() in selectedKeys
       val previewActive = page == pager.settledPage && visible && resumed
       BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(BiscuitCinema.cardShape)) {
         // Minimum rather than fixed height allows large type to grow the content.
         val height = if (maxWidth > 700.dp) 360.dp else 440.dp
-        Box(Modifier.fillMaxWidth().heightIn(min = height).background(BiscuitCinema.surface)) {
+        Box(Modifier.fillMaxWidth().heightIn(min = height).background(BiscuitCinema.surface).combinedClickable(onClick = { if (selectionMode) onSelect(hero) }, onLongClick = { onSelect(hero) }).semantics { selected = isSelected }) {
           HeroMutedPreview(video = video, active = previewActive, modifier = Modifier.matchParentSize())
           Box(Modifier.matchParentSize().background(Brush.verticalGradient(BiscuitCinema.scrim)))
+          if (isSelected) Icon(Icons.Default.CheckCircle, "Selected", tint = BiscuitCinema.accentInk,
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp))
           Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 140.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("RECENTLY ADDED", color = BiscuitCinema.accentInk, fontSize = 11.sp, letterSpacing = 2.sp)
             Text(hero.title.substringBeforeLast('.'), color = BiscuitCinema.ink, fontSize = 30.sp, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
             Text("${hero.folder} · ${hero.durationMs / 60000} min", color = BiscuitCinema.muted)
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (!selectionMode) androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
               Button(onClick = { onPlay(hero) }, colors = ButtonDefaults.buttonColors(containerColor = BiscuitCinema.accent, contentColor = BiscuitCinema.ink), modifier = Modifier.heightIn(min = 48.dp)) { Text(if (hero.resumable) "Continue" else "Play") }
               OutlinedButton(onClick = { video?.let(onInfo) }, modifier = Modifier.heightIn(min = 48.dp)) { Text("More Info", color = BiscuitCinema.ink) }
             }

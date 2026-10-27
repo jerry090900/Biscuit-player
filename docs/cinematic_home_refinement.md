@@ -119,3 +119,20 @@ Build the ARM64 Test APK workflow from phase3.5-cinematic-home. Test:
 9. Existing supplied Biscuit launcher icon under round/square masks and task icon;
    force-stop/cold launch, warm launch and Recents return: black Biscuit splash,
    no inherited REX/MPV branding flash, then cinematic Home.
+
+## Hold-to-select follow-up
+
+Home cards/hero and Audio rows now support long-press multi-selection. A pinned
+contextual toolbar appears at the top, independent of content scrolling. Tap
+other items to toggle them, use the count menu for Select all / Deselect all,
+and Back or Close to exit. Actions reuse existing Play/playlist playback, Info,
+Share and Add to playlist flows. Share and Add to playlist live in the toolbar's
+More menu. No destructive file operations are introduced. Audio sharing now uses
+an audio MIME type instead of the inherited video's MIME type.
+
+Selection uses the existing SelectionState model and durable content URI keys,
+so a repeated item in multiple shelves counts once. Selection survives rotation;
+refresh/filter changes prune items outside the current collection. Hero rotation
+pauses throughout selection mode. On-device, verify selection across repeated
+shelves, top-bar pinning while scrolling, folder-filter changes, rotation, each
+action, Back/Close, and normal tap-to-play after deselection.

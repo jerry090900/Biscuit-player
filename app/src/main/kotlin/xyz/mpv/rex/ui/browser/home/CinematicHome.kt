@@ -30,6 +30,10 @@ import xyz.mpv.rex.database.MpvExDatabase
 import xyz.mpv.rex.domain.media.model.Video
 import xyz.mpv.rex.domain.thumbnail.ThumbnailRepository
 import xyz.mpv.rex.ui.browser.LocalNavigationBarHeight
+import xyz.mpv.rex.ui.browser.selection.*
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.material.icons.filled.CheckCircle
 import xyz.mpv.rex.ui.browser.MainScreen
 import xyz.mpv.rex.ui.browser.sheets.MediaInfoSheet
 import xyz.mpv.rex.ui.browser.videolist.VideoListScreen
@@ -69,12 +73,19 @@ fun CinematicHome() {
   val backstack = LocalBackStack.current
   var info by remember { mutableStateOf<Video?>(null) }
   val bottom = LocalNavigationBarHeight.current
-  val play: (HomeMedia) -> Unit = { item -> state.videos[item.key]?.let { MediaUtils.playFile(it, context, "media_library_list") } }
+  val media = remember(state.videos) { state.videos.values.toList() }
+  val selection = rememberBiscuitMediaSelection(media, ready = !state.loading && !state.error)
+  val play: (HomeMedia) -> Unit = { item -> state.videos[item.key]?.let {
+    if (selection.active) selection.toggle(it.uri.toString()) else MediaUtils.playFile(it, context, "media_library_list")
+  } }
+  val select: (HomeMedia) -> Unit = { item -> state.videos[item.key]?.let { selection.toggle(it.uri.toString()) } }
   MaterialTheme(colorScheme = darkColorScheme(primary = BiscuitCinema.accent, onPrimary = BiscuitCinema.ink,
     background = BiscuitCinema.background, surface = BiscuitCinema.surface, onSurface = BiscuitCinema.ink)) {
-    LazyColumn(Modifier.fillMaxSize().background(BiscuitCinema.background).statusBarsPadding(), state = listState,
+    Column(Modifier.fillMaxSize().background(BiscuitCinema.background)) {
+    if (selection.active) BiscuitSelectionBar(selection, media)
+    LazyColumn(Modifier.weight(1f).fillMaxWidth().then(if (selection.active) Modifier else Modifier.statusBarsPadding()), state = listState,
       contentPadding = PaddingValues(bottom = bottom + 24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-      item(key = "brand") {
+      if (!selection.active) item(key = "brand") {
         Column(Modifier.padding(horizontal = BiscuitCinema.spacing)) {
           Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("BISCUIT", Modifier.weight(1f), color = BiscuitCinema.accentInk, letterSpacing = 5.sp, fontWeight = FontWeight.Black, fontSize = 26.sp)
@@ -86,7 +97,9 @@ fun CinematicHome() {
       }
       if (state.catalog.heroItems.isNotEmpty()) item(key = "hero") {
         val visible by remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.any { it.key == "hero" } } }
-        BiscuitHeroCarousel(state.catalog.heroItems, state.videos, visible = visible, onPlay = play, onInfo = { info = it })
+        BiscuitHeroCarousel(state.catalog.heroItems, state.videos, visible = visible && !selection.active,
+          onPlay = play, onInfo = { info = it }, selectionMode = selection.active,
+          selectedKeys = selection.state.selectedIds, onSelect = select)
       }
       if (state.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = BiscuitCinema.spacing)) }
       if (!state.loading && state.catalog.hero == null) item {
@@ -101,22 +114,29 @@ fun CinematicHome() {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
           Text(row.title, Modifier.padding(horizontal = BiscuitCinema.spacing), color = BiscuitCinema.ink, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
           LazyRow(contentPadding = PaddingValues(horizontal = BiscuitCinema.spacing), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            items(row.items, key = { it.key }) { item -> BiscuitMediaCard(item, state.videos[item.key], row.poster) { play(item) } }
+            items(row.items, key = { it.key }) { item ->
+              val video = state.videos[item.key]
+              BiscuitMediaCard(item, video, row.poster, selected = selection.selected(video?.uri.toString()),
+                onLongClick = { select(item) }, onClick = { play(item) })
+            }
           }
         }
       } }
 
+    }
     }
     info?.let { video -> MediaInfoSheet(video.uri) { info = null } }
   }
 }
 
 @Composable
-fun BiscuitMediaCard(item: HomeMedia, video: Video?, poster: Boolean, onClick: () -> Unit) {
+fun BiscuitMediaCard(item: HomeMedia, video: Video?, poster: Boolean, selected: Boolean = false, onLongClick: () -> Unit = {}, onClick: () -> Unit) {
   val width = if (poster) 144.dp else 248.dp
-  Column(Modifier.width(width).clip(BiscuitCinema.cardShape).clickable(onClick = onClick).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+  Column(Modifier.width(width).clip(BiscuitCinema.cardShape).combinedClickable(onClick = onClick, onLongClick = onLongClick).semantics { this.selected = selected }.background(if (selected) BiscuitCinema.accent.copy(alpha = .22f) else androidx.compose.ui.graphics.Color.Transparent).padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Box(Modifier.fillMaxWidth().height(if (poster) 200.dp else 140.dp).clip(BiscuitCinema.cardShape).background(BiscuitCinema.surface)) {
       HomeThumbnail(video, Modifier.fillMaxSize())
+      if (selected) Icon(Icons.Default.CheckCircle, "Selected", tint = BiscuitCinema.accentInk,
+        modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(BiscuitCinema.background, androidx.compose.foundation.shape.CircleShape))
       Text(if (item.watched) "Watched" else "${item.durationMs / 60000} min", Modifier.align(Alignment.BottomEnd).background(BiscuitCinema.background.copy(alpha = .85f)).padding(6.dp), color = BiscuitCinema.ink, fontSize = 11.sp)
     }
     if (item.progress > 0) LinearProgressIndicator(progress = { item.progress }, modifier = Modifier.fillMaxWidth(), color = BiscuitCinema.accent)

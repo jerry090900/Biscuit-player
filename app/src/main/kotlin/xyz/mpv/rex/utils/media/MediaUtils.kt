@@ -421,10 +421,13 @@ object MediaUtils : KoinComponent {
       android.util.Log.w("MediaUtils", "Only ${uris.size}/${videos.size} videos could be shared")
     }
 
+    val audioOnly = videos.all { it.isAudio }
+    val shareType = if (audioOnly) "audio/*" else if (videos.none { it.isAudio }) "video/*" else "*/*"
+    val mediaLabel = if (audioOnly) "audio files" else "videos"
     val intent =
       if (uris.size == 1) {
         Intent(Intent.ACTION_SEND).apply {
-          type = "video/*"
+          type = shareType
           putExtra(Intent.EXTRA_STREAM, uris.first())
           putExtra(Intent.EXTRA_SUBJECT, videos.first().displayName)
           putExtra(Intent.EXTRA_TITLE, videos.first().displayName)
@@ -433,9 +436,9 @@ object MediaUtils : KoinComponent {
         }
       } else {
         Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-          type = "video/*"
+          type = shareType
           putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
-          putExtra(Intent.EXTRA_SUBJECT, "Sharing ${uris.size} videos")
+          putExtra(Intent.EXTRA_SUBJECT, "Sharing ${uris.size} $mediaLabel")
           val clip = android.content.ClipData.newRawUri(videos.first().displayName, uris.first())
           uris.drop(1).forEach { u -> clip.addItem(android.content.ClipData.Item(u)) }
           clipData = clip
@@ -446,7 +449,7 @@ object MediaUtils : KoinComponent {
     context.startActivity(
       Intent.createChooser(
         intent,
-        if (uris.size == 1) "Share video" else "Share ${uris.size} videos",
+        if (uris.size == 1) { if (audioOnly) "Share audio" else "Share video" } else "Share ${uris.size} $mediaLabel",
       ),
     )
   }
