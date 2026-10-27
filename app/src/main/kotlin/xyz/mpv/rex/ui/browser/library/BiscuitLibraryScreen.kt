@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +41,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -89,7 +91,7 @@ import xyz.mpv.rex.utils.permission.PermissionUtils
  * Biscuit's compact video-library surface. The information architecture mirrors
  * the dense VLC-style folder list, while all branding, colors and icons remain Biscuit-owned.
  */
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun BiscuitLibraryScreen() {
   val context = LocalContext.current
@@ -225,34 +227,40 @@ fun BiscuitLibraryScreen() {
 
         when (permissionState.status) {
           PermissionStatus.Granted -> {
-            when {
-              loading && !completed -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BiscuitCinema.accent)
-              }
-              visibleFolders.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(if (query.isBlank()) "No video folders found" else "No matches", color = Color(0xFFAEAEB8))
-              }
-              else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = bottomNavHeight + 96.dp),
-              ) {
-                items(visibleFolders, key = { it.bucketId }) { folder ->
-                  BiscuitLibraryFolderRow(
-                    folder = folder,
-                    onOpen = { backstack.add(BiscuitVideoListScreen(folder.bucketId, folder.name)) },
-                    onPlayAll = {
-                      scope.launch {
-                        val videos = withContext(Dispatchers.IO) {
-                          MediaFileRepository.getVideosForBuckets(context, setOf(folder.bucketId)).filter { !it.isAudio }
+            PullToRefreshBox(
+              isRefreshing = loading && completed,
+              onRefresh = { model.refresh(silent = false) },
+              modifier = Modifier.fillMaxSize(),
+            ) {
+              when {
+                loading && !completed -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                  CircularProgressIndicator(color = BiscuitCinema.accent)
+                }
+                visibleFolders.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                  Text(if (query.isBlank()) "No video folders found" else "No matches", color = Color(0xFFAEAEB8))
+                }
+                else -> LazyColumn(
+                  modifier = Modifier.fillMaxSize(),
+                  contentPadding = PaddingValues(bottom = bottomNavHeight + 96.dp),
+                ) {
+                  items(visibleFolders, key = { it.bucketId }) { folder ->
+                    BiscuitLibraryFolderRow(
+                      folder = folder,
+                      onOpen = { backstack.add(BiscuitVideoListScreen(folder.bucketId, folder.name)) },
+                      onPlayAll = {
+                        scope.launch {
+                          val videos = withContext(Dispatchers.IO) {
+                            MediaFileRepository.getVideosForBuckets(context, setOf(folder.bucketId)).filter { !it.isAudio }
+                          }
+                          when (videos.size) {
+                            0 -> Unit
+                            1 -> MediaUtils.playFile(videos.first(), context)
+                            else -> MediaUtils.playPlaylist(videos, 0, context)
+                          }
                         }
-                        when (videos.size) {
-                          0 -> Unit
-                          1 -> MediaUtils.playFile(videos.first(), context)
-                          else -> MediaUtils.playPlaylist(videos, 0, context)
-                        }
-                      }
-                    },
-                  )
+                      },
+                    )
+                  }
                 }
               }
             }
