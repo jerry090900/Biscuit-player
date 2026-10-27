@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.AutoFixHigh
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -216,6 +217,17 @@ fun BiscuitPrimaryControls(viewModel: PlayerViewModel, onOpenSheet: (Sheets) -> 
             },
           )
         }
+      }
+
+      TextButton(
+        onClick = {
+          viewModel.lockControls()
+          clickEvent()
+        },
+      ) {
+        Icon(Icons.Filled.Lock, contentDescription = null, tint = Color.White)
+        Spacer(Modifier.width(5.dp))
+        Text("Lock", color = Color.White)
       }
 
       TextButton(onClick = { onOpenSheet(Sheets.More) }) {
