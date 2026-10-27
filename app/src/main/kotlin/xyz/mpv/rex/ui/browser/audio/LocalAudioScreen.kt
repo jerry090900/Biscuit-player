@@ -8,7 +8,11 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.material.icons.filled.CheckCircle
+import xyz.mpv.rex.ui.browser.selection.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material.icons.Icons
@@ -86,9 +90,15 @@ fun LocalAudioScreen() {
   }
   val folders = remember(audio) { audio.groupBy { it.bucketId } }
   val visible = remember(audio, folder) { audio.filter { folder == null || it.bucketId == folder } }
-  LazyColumn(Modifier.fillMaxSize().background(BiscuitCinema.background).statusBarsPadding(),
+  val selection = rememberBiscuitMediaSelection(visible, ready = !loading && !failed)
+  val click: (Video) -> Unit = { video ->
+    if (selection.active) selection.toggle(video.uri.toString()) else MediaUtils.playFile(video, context, "media_library_list")
+  }
+  Column(Modifier.fillMaxSize().background(BiscuitCinema.background)) {
+  if (selection.active) BiscuitSelectionBar(selection, visible)
+  LazyColumn(Modifier.weight(1f).fillMaxWidth().then(if (selection.active) Modifier else Modifier.statusBarsPadding()),
     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = LocalNavigationBarHeight.current + 24.dp)) {
-    item {
+    if (!selection.active) item {
       Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Text("Audio", Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge, color = BiscuitCinema.ink)
         IconButton(onClick = { revision++ }) { Icon(Icons.Default.Refresh, "Refresh audio", tint = BiscuitCinema.ink) }
@@ -119,22 +129,22 @@ fun LocalAudioScreen() {
       }
       if (folder == null) {
         item { Text("Recently Added", Modifier.padding(vertical = 12.dp), color = BiscuitCinema.ink, style = MaterialTheme.typography.titleLarge) }
-        items(audio.take(8), key = { "recent:${it.uri}" }) { AudioRow(it) }
+        items(visible.take(8), key = { "recent:${it.uri}" }) { AudioRow(it, selected = selection.selected(it.uri.toString()), onClick = { click(it) }, onLongClick = { selection.toggle(it.uri.toString()) }) }
       }
       item { Text(if (folder == null) "All Audio" else "Audio in folder", Modifier.padding(vertical = 12.dp), color = BiscuitCinema.ink, style = MaterialTheme.typography.titleLarge) }
-      items(visible, key = { it.uri.toString() }) { AudioRow(it) }
+      items(visible, key = { it.uri.toString() }) { AudioRow(it, selected = selection.selected(it.uri.toString()), onClick = { click(it) }, onLongClick = { selection.toggle(it.uri.toString()) }) }
     }
+  }
   }
 }
 
 @Composable
-private fun AudioRow(video: Video) {
-  val context = LocalContext.current
+private fun AudioRow(video: Video, selected: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
   ListItem(
     headlineContent = { Text(video.displayName, maxLines = 2, overflow = TextOverflow.Ellipsis) },
     supportingContent = { Text("${video.durationFormatted} · ${video.displayName.substringAfterLast('.', video.mimeType).uppercase()} · ${video.bucketDisplayName}", maxLines = 2) },
-    leadingContent = { Icon(Icons.Default.MusicNote, null, tint = BiscuitCinema.accent) },
-    colors = ListItemDefaults.colors(containerColor = BiscuitCinema.background, headlineColor = BiscuitCinema.ink, supportingColor = BiscuitCinema.muted),
-    modifier = Modifier.clickable { MediaUtils.playFile(video, context, "media_library_list") }.heightIn(min = 64.dp),
+    leadingContent = { Icon(if (selected) Icons.Default.CheckCircle else Icons.Default.MusicNote, if (selected) "Selected" else null, tint = BiscuitCinema.accentInk) },
+    colors = ListItemDefaults.colors(containerColor = if (selected) BiscuitCinema.surface else BiscuitCinema.background, headlineColor = BiscuitCinema.ink, supportingColor = BiscuitCinema.muted),
+    modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick).semantics { this.selected = selected }.heightIn(min = 64.dp),
   )
 }
