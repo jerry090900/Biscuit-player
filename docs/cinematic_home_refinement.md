@@ -136,3 +136,9 @@ refresh/filter changes prune items outside the current collection. Hero rotation
 pauses throughout selection mode. On-device, verify selection across repeated
 shelves, top-bar pinning while scrolling, folder-filter changes, rotation, each
 action, Back/Close, and normal tap-to-play after deselection.
+
+The selection follow-up is also applied on top of `library-vlc-style`, preserving
+that branch's Library, pull-to-refresh, themes and player refinements. Its
+`Library UI Test APK` workflow builds automatically on branch updates and uploads
+`Biscuit-Player-library-debug-arm64-v8a`. The ZIP includes BUILD-INFO.txt with the
+branch and exact commit to distinguish this combined test from older Home APKs.
