@@ -579,6 +579,7 @@ class PlayerActivity :
     @Suppress("DEPRECATION")
     overridePendingTransition(android.R.anim.fade_in, 0)
     super.onCreate(savedInstanceState)
+    miniPlayerStateManager.updateState(musicOnly = false)
     setContentView(binding.root)
 
     pendingIntentExtras = true

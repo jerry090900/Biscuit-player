@@ -1530,4 +1530,6 @@
     <string name="remembered_audio_use">Use</string>
     <string name="remembered_audio_replace">Replace</string>
     <string name="remembered_audio_forget">Forget</string>
+    <string name="pref_music_interface_title">Music player</string>
+    <string name="pref_music_interface_summary">Audio files always open music controls, with artwork, seeking, shuffle and repeat.</string>
 </resources>

@@ -50,6 +50,7 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.ShuffleOn
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -111,6 +112,9 @@ fun MiniPlayer(
   modifier: Modifier = Modifier,
 ) {
   val state by stateManager.state.collectAsState()
+  if (state.isPlaybackActive && state.musicOnly && state.isExpanded) {
+    MusicPlayerScreen(state, stateManager)
+  }
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()
 
@@ -265,7 +269,7 @@ fun MiniPlayer(
             }
 
             Text(
-              text = "NOW PLAYING",
+              text = if (state.musicOnly) "MUSIC" else "NOW PLAYING",
               style = MaterialTheme.typography.labelMedium.copy(
                 letterSpacing = 1.2.sp,
                 fontWeight = FontWeight.Bold,
@@ -597,7 +601,7 @@ fun MiniPlayer(
             )
           } else {
             Icon(
-              imageVector = Icons.Filled.VideoLibrary,
+              imageVector = if (state.musicOnly) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
               contentDescription = null,
               tint = MaterialTheme.colorScheme.onPrimaryContainer,
               modifier = Modifier.size(lerp(24.dp, 52.dp, fraction)),

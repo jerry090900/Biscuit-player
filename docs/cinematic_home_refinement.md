@@ -142,3 +142,36 @@ that branch's Library, pull-to-refresh, themes and player refinements. Its
 `Library UI Test APK` workflow builds automatically on branch updates and uploads
 `Biscuit-Player-library-debug-arm64-v8a`. The ZIP includes BUILD-INFO.txt with the
 branch and exact commit to distinguish this combined test from older Home APKs.
+
+## Music presentation routing
+
+On `library-vlc-style`, recognized audio now opens the existing expanded music
+controls automatically instead of PlayerActivity, independent of the legacy
+optional direct-mini-player preference. The Audio tab provides the current
+filtered audio collection as its queue so previous/next remain useful. Music
+artwork opens/stays in music controls; notification taps return to those controls.
+A small MusicActivity routes Android audio/* Open actions into MainActivity and
+mpv's existing headless session without creating a video-player Activity. URI
+identity and incoming read grants are retained. No other playback engine is added.
+
+Routing uses audio metadata, MIME and known audio extensions, including opaque
+MediaStore audio URIs. Known video containers retain the existing video route;
+video plus external-audio playback and its persistence are unaffected. Music
+settings describe the fixed behavior instead of presenting an ineffective toggle.
+The legacy preference key remains stored for compatibility. Room stays at 19.
+
+Device checks: play MP3/M4A/FLAC/OGG/Opus from Audio, Library/recent/playlist actions
+and Android Open with; confirm music controls, never video chrome. Check queue
+previous/next, pause, seek, shuffle, repeat, background/notification reopening,
+collapsed/expanded artwork taps and rotation. Then play a video and verify normal
+video controls, external audio and remembered offsets still work.
+
+Expanded music uses a dedicated scrollable, inset-aware screen with the existing
+state manager's controls; it adapts artwork size in landscape. Minimize/Back
+returns to the mini-player, Stop ends playback. There are no video controls on
+this music screen and tapping its artwork cannot launch PlayerActivity.
+
+Known audio files opened through the network browser reuse its existing proxy /
+provider URI with music presentation; protocol registration is unchanged. Legacy
+PlayerScreen audio launches delegate to the same route. Verify network audio
+play/pause, seek and stop alongside existing network-video playback.

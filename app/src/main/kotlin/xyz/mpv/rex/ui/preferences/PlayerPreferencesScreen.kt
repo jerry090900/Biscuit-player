@@ -314,7 +314,6 @@ object PlayerPreferencesScreen : Screen {
 
           item {
             val backgroundPlayback by preferences.backgroundPlayback.collectAsState()
-            val playInMiniPlayerDirectly by preferences.playInMiniPlayerDirectly.collectAsState()
 
             GroupedListColumn {
               GroupedPreferenceCard(
@@ -338,21 +337,11 @@ object PlayerPreferencesScreen : Screen {
 
               GroupedPreferenceCard(
                 position = GroupPosition.LAST,
-                highlightKey = R.string.pref_player_play_in_mini_player,
+                highlightKey = listOf(R.string.pref_player_play_in_mini_player, R.string.pref_music_interface_title),
               ) {
-                SwitchPreference(
-                  value = playInMiniPlayerDirectly,
-                  onValueChange = preferences.playInMiniPlayerDirectly::set,
-                  title = { Text(text = stringResource(R.string.pref_player_play_in_mini_player)) },
-                  summary = {
-                    Text(
-                      text = if (playInMiniPlayerDirectly)
-                        stringResource(R.string.pref_player_play_in_mini_player_summary_on)
-                      else
-                        stringResource(R.string.pref_player_play_in_mini_player_summary_off),
-                      color = MaterialTheme.colorScheme.outline,
-                    )
-                  },
+                androidx.compose.material3.ListItem(
+                  headlineContent = { Text(stringResource(R.string.pref_music_interface_title)) },
+                  supportingContent = { Text(stringResource(R.string.pref_music_interface_summary)) },
                 )
               }
             }

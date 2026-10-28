@@ -92,7 +92,7 @@ fun LocalAudioScreen() {
   val visible = remember(audio, folder) { audio.filter { folder == null || it.bucketId == folder } }
   val selection = rememberBiscuitMediaSelection(visible, ready = !loading && !failed)
   val click: (Video) -> Unit = { video ->
-    if (selection.active) selection.toggle(video.uri.toString()) else MediaUtils.playFile(video, context, "media_library_list")
+    if (selection.active) selection.toggle(video.uri.toString()) else MediaUtils.playPlaylist(visible, visible.indexOfFirst { it.uri == video.uri }.coerceAtLeast(0), context, "audio_library")
   }
   Column(Modifier.fillMaxSize().background(BiscuitCinema.background)) {
   if (selection.active) BiscuitSelectionBar(selection, visible)

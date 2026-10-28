@@ -68,6 +68,22 @@
         </activity-alias>
 
         <activity
+            android:name=".MusicActivity"
+            android:exported="true"
+            android:theme="@style/Theme.mpvex">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ui.player.PlayerActivity"
             android:autoRemoveFromRecents="true"
             android:noHistory="false"
@@ -92,7 +108,6 @@
                 <data android:scheme="https" />
 
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="*/rmvb" />
                 <data android:mimeType="*/avi" />
                 <data android:mimeType="*/mkv" />
@@ -135,7 +150,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
@@ -263,7 +277,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="application/x-subrip" />
@@ -288,7 +301,6 @@
                 <data android:scheme="content" />
                 <data android:scheme="file" />
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="text/*" />
                 <data android:mimeType="application/x-subrip" />
@@ -364,7 +376,6 @@
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="application/*" />
             </intent-filter>
@@ -372,7 +383,6 @@
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="video/*" />
-                <data android:mimeType="audio/*" />
                 <data android:mimeType="image/*" />
                 <data android:mimeType="application/*" />
             </intent-filter>

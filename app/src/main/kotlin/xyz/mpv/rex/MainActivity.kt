@@ -96,9 +96,26 @@ class MainActivity : ComponentActivity() {
     super.attachBaseContext(xyz.mpv.rex.utils.locale.LocaleHelper.wrapContext(newBase))
   }
 
+  private fun handleMusicIntent(incoming: android.content.Intent) {
+    if (incoming.getBooleanExtra("open_music_uri", false)) {
+      incoming.removeExtra("open_music_uri")
+      incoming.data?.let { uri -> xyz.mpv.rex.utils.media.MediaUtils.playMusicUri(uri, incoming.getStringExtra(android.content.Intent.EXTRA_TITLE)) }
+    } else if (incoming.getBooleanExtra("open_music_controls", false)) {
+      incoming.removeExtra("open_music_controls")
+      if (miniPlayerStateManager.state.value.musicOnly) miniPlayerStateManager.setExpanded(true)
+    }
+  }
+
+  override fun onNewIntent(intent: android.content.Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleMusicIntent(intent)
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
     super.onCreate(savedInstanceState)
+    handleMusicIntent(intent)
     
     PermissionUtils.setMediaAccessLauncher(mediaAccessLauncher)
 

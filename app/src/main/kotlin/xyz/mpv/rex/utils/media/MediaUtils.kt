@@ -47,6 +47,19 @@ object MediaUtils : KoinComponent {
   private val playbackStateRepository: PlaybackStateRepository by inject()
   private val playerPreferences: PlayerPreferences by inject()
   private val headlessPlaybackController: HeadlessPlaybackController by inject()
+  private val miniPlayerStateManager: xyz.mpv.rex.ui.browser.miniplayer.MiniPlayerStateManager by inject()
+
+  internal fun isMusicSource(context: Context, source: Any): Boolean {
+    if (source is Video) return usesMusicInterface(source.displayName, source.mimeType, source.isAudio)
+    val uri = when (source) {
+      is Uri -> source
+      is String -> Uri.parse(source)
+      else -> return false
+    }
+    val mime = if (uri.scheme == "content") runCatching { context.contentResolver.getType(uri) }.getOrNull() else null
+    val mediaStoreAudio = uri.authority == "media" && uri.path.orEmpty().contains("/audio/media")
+    return usesMusicInterface(uri.lastPathSegment ?: uri.toString(), mime, mediaStoreAudio)
+  }
 
   /**
    * Play video content from any source.
@@ -163,44 +176,12 @@ object MediaUtils : KoinComponent {
       intent.putExtra("title", source.displayName)
     }
 
-    val isAudio = when (source) {
-      is Video -> source.isAudio && !xyz.mpv.rex.utils.storage.FileTypeUtils.isVideoFile(File(source.path))
-      is String -> {
-        val path = if (source.startsWith("file://")) source.removePrefix("file://") else source
-        val file = File(path)
-        xyz.mpv.rex.utils.storage.FileTypeUtils.isAudioFile(file) && !xyz.mpv.rex.utils.storage.FileTypeUtils.isVideoFile(file)
-      }
-      is Uri -> {
-        val path = source.path ?: ""
-        val file = File(path)
-        xyz.mpv.rex.utils.storage.FileTypeUtils.isAudioFile(file) && !xyz.mpv.rex.utils.storage.FileTypeUtils.isVideoFile(file)
-      }
-      else -> false
-    }
-
-    // Direct mini player mode: start headless playback in the bottom bar for audio files
-    if (playerPreferences.playInMiniPlayerDirectly.get() && isAudio) {
+    // Audio always opens the dedicated music controls, regardless of the legacy
+    // optional direct-mini-player preference. No video Activity is created.
+    if (isMusicSource(context, source)) {
       intent.data?.let { uri ->
-        val title = intent.getStringExtra("title") ?: deriveTitle(uri, source)
-        val path = if (uri.scheme == "file") uri.path else (source as? Video)?.path
-        var uris = listOf(uri)
-        var startIndex = 0
-
-        if (path != null && playerPreferences.playlistMode.get()) {
-          val playlistResult = kotlinx.coroutines.runBlocking {
-            if (launchSource == "media_library_list") {
-              FolderPlaylistOps.generateMediaLibraryPlaylist(context, path)
-            } else {
-              FolderPlaylistOps.generateFolderPlaylist(context, path, launchSource)
-            }
-          }
-          if (playlistResult != null) {
-            uris = playlistResult.first
-            startIndex = playlistResult.second
-          }
-        }
-
-        startHeadless(uris, startIndex, title, launchSource = launchSource)
+        startHeadless(listOf(uri), 0, intent.getStringExtra("title") ?: deriveTitle(uri, source),
+          launchSource = launchSource, musicOnly = true)
         return
       }
     }
@@ -263,7 +244,7 @@ object MediaUtils : KoinComponent {
     intent.putExtra("title", firstVideo.displayName)
 
     // Direct mini player mode: start headless playback with the full playlist for audio files.
-    if (playerPreferences.playInMiniPlayerDirectly.get() && firstVideo.isAudio && !xyz.mpv.rex.utils.storage.FileTypeUtils.isVideoFile(File(firstVideo.path))) {
+    if (isMusicSource(context, firstVideo)) {
       val uris = videos.map { video ->
         if (video.uri.scheme == null &&
           (video.path.startsWith("/") || video.path.startsWith("file://"))
@@ -274,7 +255,7 @@ object MediaUtils : KoinComponent {
           video.uri
         }
       }
-      startHeadless(uris, startIndex, firstVideo.displayName, launchSource = launchSource, playlistId = playlistId)
+      startHeadless(uris, startIndex, firstVideo.displayName, launchSource = launchSource, playlistId = playlistId, musicOnly = true)
       return
     }
 
@@ -306,7 +287,8 @@ object MediaUtils : KoinComponent {
         video.uri
       }
     }
-    startHeadless(uris, startIndex, videos[startIndex].displayName, launchSource = launchSource, playlistId = playlistId)
+    startHeadless(uris, startIndex, videos[startIndex].displayName, launchSource = launchSource, playlistId = playlistId,
+      musicOnly = usesMusicInterface(videos[startIndex].displayName, videos[startIndex].mimeType, videos[startIndex].isAudio))
   }
 
   /**
@@ -319,6 +301,7 @@ object MediaUtils : KoinComponent {
     title: String,
     launchSource: String? = null,
     playlistId: Int? = null,
+    musicOnly: Boolean = false,
   ) {
     val resumeSec = kotlinx.coroutines.runBlocking {
       runCatching {
@@ -334,6 +317,12 @@ object MediaUtils : KoinComponent {
       launchSource = launchSource ?: "direct_mini_player",
       playlistId = playlistId,
     )
+    miniPlayerStateManager.updateState(musicOnly = musicOnly, isExpanded = musicOnly)
+  }
+
+  /** Android audio-file entry point when its provider supplies an opaque URI. */
+  fun playMusicUri(uri: Uri, title: String? = null) {
+    startHeadless(listOf(uri), 0, title ?: deriveTitle(uri, uri), launchSource = "open_music", musicOnly = true)
   }
 
   private fun deriveTitle(uri: Uri, source: Any): String = when (source) {

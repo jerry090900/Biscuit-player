@@ -443,9 +443,9 @@ object SearchablePreferences {
                 targetIndex = 3,
             ))
             add(SearchablePreference(
-                titleRes = R.string.pref_player_play_in_mini_player,
-                summaryRes = R.string.pref_player_play_in_mini_player_summary_on,
-                keywords = listOf("mini player", "audio", "background", "bottom bar"),
+                titleRes = R.string.pref_music_interface_title,
+                summaryRes = R.string.pref_music_interface_summary,
+                keywords = listOf("music player", "mini player", "audio", "background"),
                 category = "Player",
                 screen = PlayerPreferencesScreen,
                 targetIndex = 3,

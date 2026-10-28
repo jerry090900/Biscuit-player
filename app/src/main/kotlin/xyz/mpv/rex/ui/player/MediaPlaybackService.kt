@@ -481,6 +481,7 @@ class MediaPlaybackService :
         if (isDirectMiniPlayerSession) MainActivity::class.java else PlayerActivity::class.java,
       ).apply {
         flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        putExtra("open_music_controls", miniPlayerStateManager.state.value.musicOnly)
       }
     val pendingIntent =
       PendingIntent.getActivity(

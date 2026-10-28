@@ -117,6 +117,12 @@ class NetworkBrowserViewModel(
           NetworkStreamingProvider.getUri(application, connectionId, file.path)
         }
 
+        // Reuse the registered stream/provider URI; only audio presentation changes.
+        if (xyz.mpv.rex.utils.media.usesMusicInterface(file.name, file.mimeType)) {
+          xyz.mpv.rex.utils.media.MediaUtils.playMusicUri(uri, file.name)
+          return@launch
+        }
+
         // Launch the player
         val intent = Intent(Intent.ACTION_VIEW, uri)
         intent.setClass(application, xyz.mpv.rex.ui.player.PlayerActivity::class.java)

@@ -36,6 +36,10 @@ data class PlayerScreen(
 
     LaunchedEffect(source) {
       val uri = resolveToUri(source)
+      if (xyz.mpv.rex.utils.media.MediaUtils.isMusicSource(context, uri)) {
+        xyz.mpv.rex.utils.media.MediaUtils.playFile(uri, context, launchSource)
+        return@LaunchedEffect
+      }
       val intent =
         Intent(Intent.ACTION_VIEW).apply {
           data = uri

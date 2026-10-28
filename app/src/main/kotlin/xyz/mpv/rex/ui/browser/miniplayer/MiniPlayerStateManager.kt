@@ -33,6 +33,7 @@ data class MiniPlayerState(
   val nextThumbnail: Bitmap? = null,
   val prevThumbnail: Bitmap? = null,
   val isExpanded: Boolean = false,
+  val musicOnly: Boolean = false,
   val shuffleEnabled: Boolean = false,
   val repeatMode: RepeatMode = RepeatMode.OFF,
 )
@@ -83,6 +84,7 @@ class MiniPlayerStateManager : KoinComponent {
     nextThumbnail: Bitmap? = _state.value.nextThumbnail,
     prevThumbnail: Bitmap? = _state.value.prevThumbnail,
     isExpanded: Boolean = _state.value.isExpanded,
+    musicOnly: Boolean = _state.value.musicOnly,
     shuffleEnabled: Boolean = _state.value.shuffleEnabled,
     repeatMode: RepeatMode = _state.value.repeatMode,
   ) {
@@ -103,6 +105,7 @@ class MiniPlayerStateManager : KoinComponent {
         nextThumbnail = nextThumbnail,
         prevThumbnail = prevThumbnail,
         isExpanded = isExpanded,
+        musicOnly = musicOnly,
         shuffleEnabled = shuffleEnabled,
         repeatMode = repeatMode,
       )
@@ -228,10 +231,14 @@ class MiniPlayerStateManager : KoinComponent {
 
   fun clearState() {
     savedPlayerIntent = null
-    _state.update { it.copy(isPlaybackActive = false, isExpanded = false) }
+    _state.update { it.copy(isPlaybackActive = false, isExpanded = false, musicOnly = false) }
   }
 
   fun openPlayer(context: Context) {
+    if (_state.value.musicOnly) {
+      setExpanded(true)
+      return
+    }
     val intent = Intent(context, PlayerActivity::class.java).apply {
       flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
       // Direct mini player mode: hand the live headless MPV session over to PlayerActivity
