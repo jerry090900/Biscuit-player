@@ -175,3 +175,16 @@ Known audio files opened through the network browser reuse its existing proxy /
 provider URI with music presentation; protocol registration is unchanged. Legacy
 PlayerScreen audio launches delegate to the same route. Verify network audio
 play/pause, seek and stop alongside existing network-video playback.
+
+## Stable compact music / swipe dismissal
+
+Music now starts in a fixed 80dp compact bar. Tap or deliberately swipe upward
+opens a Material bottom sheet with no partial-expanded anchor. Swipe down, Back,
+or Minimize dismisses it and leaves the compact bar; metadata updates and next
+tracks do not expand it. Music returns early from the legacy mini-player renderer
+so its fraction animations, per-drag coroutines and BackHandler cannot run below
+the music sheet. Video mini-player behavior is unchanged. Tests cover direction,
+threshold, cancelled gestures and preventing accumulation across separate swipes.
+Device checks: repeated up/down gestures, downward drag while already compact,
+partial swipes/cancellation, scroll content to top then dismiss, Back/Minimize,
+pause/next while compact, rotation, and notification reopening.

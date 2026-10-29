@@ -112,8 +112,11 @@ fun MiniPlayer(
   modifier: Modifier = Modifier,
 ) {
   val state by stateManager.state.collectAsState()
-  if (state.isPlaybackActive && state.musicOnly && state.isExpanded) {
-    MusicPlayerScreen(state, stateManager)
+  // Music has one fixed compact bar and one sheet; never run the legacy video
+  // player's expansion fraction, drag coroutines or BackHandler underneath it.
+  if (state.musicOnly) {
+    MusicMiniPlayer(state, stateManager, modifier)
+    return
   }
   val context = LocalContext.current
   val coroutineScope = rememberCoroutineScope()

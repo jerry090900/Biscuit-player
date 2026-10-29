@@ -317,7 +317,8 @@ object MediaUtils : KoinComponent {
       launchSource = launchSource ?: "direct_mini_player",
       playlistId = playlistId,
     )
-    miniPlayerStateManager.updateState(musicOnly = musicOnly, isExpanded = musicOnly)
+    // New tracks start compact; only an explicit user gesture opens music controls.
+    miniPlayerStateManager.updateState(musicOnly = musicOnly, isExpanded = false)
   }
 
   /** Android audio-file entry point when its provider supplies an opaque URI. */

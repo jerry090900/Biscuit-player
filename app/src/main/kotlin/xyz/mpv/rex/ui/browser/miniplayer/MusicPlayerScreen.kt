@@ -20,23 +20,23 @@ import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import xyz.mpv.rex.ui.browser.home.BiscuitCinema
 import xyz.mpv.rex.ui.player.RepeatMode
 
 /** Music presentation only: the existing mpv session and state manager own all playback. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicPlayerScreen(state: MiniPlayerState, manager: MiniPlayerStateManager) {
   val context = LocalContext.current
   var draggedProgress by remember(state.videoPath) { mutableStateOf<Float?>(null) }
   val progress = if (state.durationMs > 0) (state.currentPositionMs.toFloat() / state.durationMs).coerceIn(0f, 1f) else 0f
-  Dialog(onDismissRequest = { manager.setExpanded(false) },
-    properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+  ModalBottomSheet(onDismissRequest = { manager.setExpanded(false) }, sheetState = sheetState,
+    containerColor = BiscuitCinema.background) {
     MaterialTheme(colorScheme = darkColorScheme(primary = BiscuitCinema.accentInk, surface = BiscuitCinema.surface,
       background = BiscuitCinema.background, onSurface = BiscuitCinema.ink)) {
-      Surface(Modifier.fillMaxSize().semantics { paneTitle = "Music player" }, color = BiscuitCinema.background) {
-        BoxWithConstraints(Modifier.fillMaxSize().systemBarsPadding().displayCutoutPadding()) {
+      Surface(Modifier.fillMaxWidth().heightIn(max = 640.dp).semantics { paneTitle = "Music player" }, color = BiscuitCinema.background) {
+        BoxWithConstraints(Modifier.fillMaxSize().displayCutoutPadding()) {
           val artworkSize = if (maxHeight < 480.dp) 96.dp else minOf(maxWidth - 48.dp, 240.dp)
           Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
