@@ -35,6 +35,21 @@ interface PlaylistDao {
   @Query("SELECT * FROM PlaylistEntity WHERE id = :playlistId")
   fun observePlaylistById(playlistId: Int): Flow<PlaylistEntity?>
 
+  /** Atomic queue snapshot. A repeated tap/name cannot create a second playlist. */
+  @Transaction
+  suspend fun saveMusicQueue(name: String, sources: List<String>, now: Long): Boolean {
+    val validName = xyz.mpv.rex.ui.browser.miniplayer.settings.MusicInput.playlistName(name) ?: return false
+    if (!xyz.mpv.rex.ui.browser.miniplayer.settings.MusicInput.durableQueue(sources)) return false
+    if (xyz.mpv.rex.ui.browser.miniplayer.settings.MusicInput.duplicateName(validName, getAllPlaylists().map { it.name })) return false
+    val id = insertPlaylist(PlaylistEntity(name = validName, createdAt = now, updatedAt = now)).toInt()
+    insertPlaylistItems(sources.mapIndexed { index, source ->
+      PlaylistItemEntity(playlistId = id, filePath = source,
+        fileName = android.net.Uri.parse(source).lastPathSegment ?: "Track ${index + 1}",
+        position = index, addedAt = now)
+    })
+    return true
+  }
+
   // Playlist item operations
   @Insert(onConflict = OnConflictStrategy.REPLACE)
   suspend fun insertPlaylistItem(item: PlaylistItemEntity)

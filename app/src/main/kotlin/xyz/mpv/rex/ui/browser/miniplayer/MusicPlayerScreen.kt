@@ -45,6 +45,9 @@ fun MusicPlayerScreen(state: MiniPlayerState, manager: MiniPlayerStateManager) {
                 Icon(Icons.Default.ExpandMore, "Minimize music player")
               }
               Text("MUSIC", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+              key(state.videoPath) {
+                xyz.mpv.rex.ui.browser.miniplayer.settings.MusicSettingsMenu(state, manager)
+              }
               IconButton(onClick = { manager.closeMiniPlayer(context) }, modifier = Modifier.size(48.dp)) {
                 Icon(Icons.Default.Close, "Stop music")
               }

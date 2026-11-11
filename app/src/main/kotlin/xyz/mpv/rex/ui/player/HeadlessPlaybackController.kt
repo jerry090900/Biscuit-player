@@ -44,6 +44,7 @@ import java.io.File
 class HeadlessPlaybackController(private val appContext: Context) : KoinComponent {
   private val miniPlayerStateManager: MiniPlayerStateManager by inject()
   private val playerPreferences: PlayerPreferences by inject()
+  private val musicSettings: xyz.mpv.rex.ui.browser.miniplayer.settings.MusicAdvancedController by inject()
 
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -284,6 +285,7 @@ class HeadlessPlaybackController(private val appContext: Context) : KoinComponen
     val title = deriveTitle(uri)
     activeTitle = title
 
+    musicSettings.sourceChanged(uri.toString(), miniPlayerStateManager.state.value.musicOnly)
     val playable = uri.resolveUri(appContext) ?: uri.toString()
     runCatching { MPVLib.command("loadfile", playable) }
     runCatching { MPVLib.setPropertyBoolean("pause", false) }
@@ -437,7 +439,11 @@ class HeadlessPlaybackController(private val appContext: Context) : KoinComponen
           }
         }
       }
-      override fun event(eventId: Int, data: MPVNode) {}
+      override fun event(eventId: Int, data: MPVNode) {
+        if (eventId == MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED) scope.launch {
+          if (isSessionActive && ownsNativeSession && miniPlayerStateManager.state.value.musicOnly) musicSettings.loaded()
+        }
+      }
       override fun eventProperty(property: String) {}
       override fun eventProperty(property: String, value: Long) {}
       override fun eventProperty(property: String, value: String) {}
@@ -475,6 +481,7 @@ class HeadlessPlaybackController(private val appContext: Context) : KoinComponen
    * Called just before launching the full-screen player so playback continues seamlessly.
    */
   fun detachForHandoff() {
+    musicSettings.endSession()
     resumeObserver?.let { runCatching { MPVLib.removeObserver(it) } }
     resumeObserver = null
     removeMpvObserver()
@@ -495,6 +502,7 @@ class HeadlessPlaybackController(private val appContext: Context) : KoinComponen
    * is still releasing the activity surface can race libmpv's render thread on Android.
    */
   fun retainAfterPlayerExit() {
+    musicSettings.endSession()
     resumeObserver?.let { runCatching { MPVLib.removeObserver(it) } }
     resumeObserver = null
     removeMpvObserver()
@@ -530,6 +538,7 @@ class HeadlessPlaybackController(private val appContext: Context) : KoinComponen
    * playback start reuse the existing instance safely.
    */
   fun stop() {
+    musicSettings.endSession()
     resumeObserver?.let { runCatching { MPVLib.removeObserver(it) } }
     resumeObserver = null
     removeMpvObserver()

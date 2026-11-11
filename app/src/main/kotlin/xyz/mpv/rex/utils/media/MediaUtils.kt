@@ -308,6 +308,9 @@ object MediaUtils : KoinComponent {
         playbackStateRepository.getVideoDataByTitle(title)?.lastPosition ?: 0
       }.getOrDefault(0)
     }
+    // Publish the presentation mode before synchronous native-session reuse/file loading.
+    // New tracks still start compact; only an explicit gesture opens music controls.
+    miniPlayerStateManager.updateState(musicOnly = musicOnly, isExpanded = false)
     headlessPlaybackController.startHeadless(
       uris = uris,
       startIndex = startIndex,
@@ -317,8 +320,6 @@ object MediaUtils : KoinComponent {
       launchSource = launchSource ?: "direct_mini_player",
       playlistId = playlistId,
     )
-    // New tracks start compact; only an explicit user gesture opens music controls.
-    miniPlayerStateManager.updateState(musicOnly = musicOnly, isExpanded = false)
   }
 
   /** Android audio-file entry point when its provider supplies an opaque URI. */

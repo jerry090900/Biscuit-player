@@ -24,6 +24,20 @@ val domainModule = module {
     single { HdrToysManager(androidContext()) }
     single { WyzieSearchRepository(androidContext(), get(), get(), get()) }
     single { PlaybackManager(get()) }
+    single { xyz.mpv.rex.ui.browser.miniplayer.settings.MusicPreferences(get()) }
+    single {
+        xyz.mpv.rex.ui.browser.miniplayer.settings.MusicAdvancedController(
+            xyz.mpv.rex.ui.browser.miniplayer.settings.MpvMusicEngine(), get<xyz.mpv.rex.ui.browser.miniplayer.settings.MusicPreferences>(),
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main.immediate),
+            android.os.SystemClock::elapsedRealtime,
+        )
+    }
+    single {
+        androidx.room.Room.databaseBuilder(androidContext(),
+            xyz.mpv.rex.ui.browser.miniplayer.settings.MusicBookmarksDatabase::class.java,
+            "biscuit_music_bookmarks.db").build()
+    }
+    single { get<xyz.mpv.rex.ui.browser.miniplayer.settings.MusicBookmarksDatabase>().bookmarks() }
     single { MiniPlayerStateManager() }
     single { HeadlessPlaybackController(androidContext()) }
     single { xyz.mpv.rex.jellyfin.api.JellyfinApi(get(), get(), get()) }

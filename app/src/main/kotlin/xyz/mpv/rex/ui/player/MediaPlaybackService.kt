@@ -81,6 +81,7 @@ class MediaPlaybackService :
   private val playerPreferences: PlayerPreferences by inject()
   private val gesturePreferences: GesturePreferences by inject()
   private val playbackManager: PlaybackManager by inject()
+  private val musicSettings: xyz.mpv.rex.ui.browser.miniplayer.settings.MusicAdvancedController by inject()
   private val miniPlayerStateManager: MiniPlayerStateManager by inject()
 
   private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main)
@@ -664,6 +665,7 @@ class MediaPlaybackService :
 
       isServiceRunning = false
 
+      if (isDirectMiniPlayerSession) musicSettings.endSession()
       // Cancel coroutine scope
       serviceScope.cancel()
 
