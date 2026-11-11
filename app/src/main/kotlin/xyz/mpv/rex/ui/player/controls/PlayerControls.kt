@@ -39,6 +39,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -135,6 +138,7 @@ import xyz.mpv.rex.ui.player.controls.components.SeekPlayerUpdate
 import xyz.mpv.rex.ui.player.controls.components.PlayerLoadingIndicator
 import xyz.mpv.rex.ui.player.controls.components.rememberPlayerLoadingState
 import xyz.mpv.rex.ui.player.controls.components.SeekbarWithTimers
+import xyz.mpv.rex.ui.player.controls.components.LockedPlaybackTimeline
 import xyz.mpv.rex.ui.player.controls.components.SlideToUnlock
 import xyz.mpv.rex.ui.player.controls.components.SpeedControlSlider
 import xyz.mpv.rex.ui.player.controls.components.TextPlayerUpdate
@@ -987,15 +991,29 @@ fun PlayerControls(
           modifier =
             Modifier
               .constrainAs(unlockControlsButton) {
+                width = Dimension.fillToConstraints
                 bottom.linkTo(parent.bottom, spacing.extraLarge)
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
               },
         ) {
-          SlideToUnlock(
-            onUnlock = { viewModel.unlockControls() },
-            onDraggingChanged = { isDragging -> isUnlockSliderDragging = isDragging },
-          )
+          Column(
+            modifier = Modifier
+              .fillMaxWidth()
+              .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+              .padding(horizontal = spacing.large),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(spacing.small),
+          ) {
+            LockedPlaybackTimeline(
+              positionSeconds = if (isLoadingFile) 0f else precisePosition,
+              durationSeconds = if (isLoadingFile) 0f else if (preciseDuration > 0f) preciseDuration else duration?.toFloat() ?: 0f,
+            )
+            SlideToUnlock(
+              onUnlock = { viewModel.unlockControls() },
+              onDraggingChanged = { isDragging -> isUnlockSliderDragging = isDragging },
+            )
+          }
         }
 
         PlayerLoadingIndicator(
